@@ -6,6 +6,8 @@ from pathlib import Path
 
 from ..domain import engine as engine_rules
 from ..domain import model as model_rules
+from ..errors import LaunchError
+from ..i18n import tr
 from ..infra.engine_files import is_installed
 from ..infra.files import compact_json, read_json, write_atomic
 
@@ -73,6 +75,15 @@ class Registry:
     def _checked(self, cfg):
         for mid, c in cfg.items():
             model_rules.validate(mid, c, self.engines, listen_port=self.listen_port)
+        # Without match_file, processes are found by name only: two models of one engine would be
+        # mistaken for each other (the running one shown as the first in models.json).
+        by_engine = {}
+        for mid, c in cfg.items():
+            if not self.engines[c["engine"]].get("match_file"):
+                by_engine.setdefault(c["engine"], []).append(mid)
+        for eid, mids in by_engine.items():
+            if len(mids) > 1:
+                raise LaunchError(tr("cfg.engine_shared", engine=eid, models=", ".join(mids)))
         return {mid: model_rules.resolve(mid, c, self.engines[c["engine"]], vram_mib=self.vram_need(c))
                 for mid, c in cfg.items()}
 

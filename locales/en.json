@@ -220,6 +220,7 @@
   "cfg.bad_value": "{key}: invalid value {value}",
   "cfg.value_not_allowed": "{key}: {value} not in {allowed}",
   "cfg.profile_value": "profile {name}: {key}={value} is not in the menu",
+  "cfg.engine_shared": "models {models} share the engine {engine}: add \"match_file\": true to it in engines.json",
 
   "err.model_running": "This model is running: stop it first.",
   "prof.empty": "Empty profile name.",
