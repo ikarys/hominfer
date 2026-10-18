@@ -19,7 +19,8 @@
   "ui.theme.neo": "Neo",
 
   "ui.sys.ram": "RAM",
-  "ui.sys.ram_hint": "mémoire disponible pour le système du launcher",
+  "ui.sys.ram_hint": "mémoire système",
+  "ui.sys.ram_hint_host": "la mémoire de l'hôte Windows (via WSL)",
   "ui.sys.free": "libre {size}",
   "ui.sys.baseline": "Système",
   "ui.sys.other": "autre",

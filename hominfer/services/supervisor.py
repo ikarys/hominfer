@@ -12,10 +12,10 @@ import psutil
 
 from ..domain import engine as engine_rules
 from ..domain.model import clean_options
-from ..domain.status import model_state, model_vram
+from ..domain.status import baseline_ok, model_state, model_vram, on_gpu_for
 from ..errors import LaunchError
 from ..i18n import gib, tr
-from ..infra import net, processes
+from ..infra import net, processes, windows
 from ..infra.files import tail
 
 
@@ -58,20 +58,29 @@ class Supervisor:
 
     def poll(self):
         gpu, procs = self.gpu(), self.find()
-        if gpu and not gpu["pids"]:
+        running = any(procs.values())
+        if gpu and baseline_ok(gpu["pids"], running, gpu["util"]):
             self.baseline = gpu["used"]
-        on_gpu = {mid: bool(gpu) and any(p.pid in gpu["pids"] for p in ps) for mid, ps in procs.items()}
+        # A model on the GPU keeps its VRAM while the process lives, even when the GPU is idle
+        # (util ~ 0): attribute the GPU to VRAM allocated beyond the idle baseline, not to the
+        # instantaneous activity (which flickers with every request).
+        allocated = bool(gpu) and (gpu["used"] - self.baseline_mib()) > 256
+        on_gpu = on_gpu_for(procs, gpu["pids"], allocated) if gpu else {mid: False for mid in procs}
         with self.lock:
             models = {mid: self._model_view(mid, m, procs.get(mid, []), gpu, on_gpu)
                       for mid, m in self.registry.models.items()}
             alive = {p.pid for ps in procs.values() for p in ps}
             self.pcache = {pid: p for pid, p in self.pcache.items() if pid in alive}
+        host = windows.host_memory()  # outside WSL: None -> the VM's own /proc/meminfo
         vm = psutil.virtual_memory()
+        ram = host | {"source": "host"} if host else \
+            {"used_mib": round((vm.total - vm.available) / 2**20), "total_mib": round(vm.total / 2**20),
+             "source": "wsl"}
         self.snapshot = {
             "ready": True, "time": time.time(), "lan_ip": self.ip,
             "gpu": gpu and {k: v for k, v in gpu.items() if k != "pids"} | {
                 "baseline": self.baseline_mib(), "baseline_measured": self.baseline is not None},
-            "ram": {"used_mib": round((vm.total - vm.available) / 2**20), "total_mib": round(vm.total / 2**20)},
+            "ram": ram,
             "cpu": {"pct": psutil.cpu_percent(None), "count": psutil.cpu_count() or 1},
             "models": models,
         }
@@ -86,7 +95,7 @@ class Supervisor:
         vram, how = None, None
         if ps and gpu:
             vram, how = model_vram(mid, on_gpu, gpu["used"], self.baseline_mib(), self.baseline is not None,
-                                   run and run["vram_load"])
+                                   run and run["vram_load"], pids_known=bool(gpu["pids"]))
         rss, cpu, started = self._usage(ps)
         ncpu = psutil.cpu_count() or 1
         return {

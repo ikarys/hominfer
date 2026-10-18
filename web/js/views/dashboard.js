@@ -66,6 +66,7 @@ function renderSystem(st) {
     $("#vramBig").textContent = t("ui.sys.no_gpu");
   }
   $("#ramBig").innerHTML = `${gb(st.ram.used_mib)} <small>/ ${gb(st.ram.total_mib)}</small>`;
+  $("#ramMeta").textContent = t(st.ram.source === "host" ? "ui.sys.ram_hint_host" : "ui.sys.ram_hint");
   spark($("#ramSpark"), track("ram", st.ram.used_mib), st.ram.total_mib, "var(--seg-2)");
   $("#cpuBig").textContent = Math.round(st.cpu.pct) + " %";
   spark($("#cpuSpark"), track("cpu", st.cpu.pct), 100, "var(--ok)");

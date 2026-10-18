@@ -7,7 +7,7 @@ import psutil
 
 from ..domain import compat
 from ..domain.kinds import TASK_KIND
-from ..infra import huggingface as hf
+from ..infra import huggingface as hf, windows
 
 
 class HubAdvisor:
@@ -18,10 +18,12 @@ class HubAdvisor:
 
     def hardware(self):
         g, base = self.gpu(), self.baseline_mib()
+        host = windows.host_memory()  # the WSL VM under-sizes the machine's RAM
         return {"gpu": g and g["name"], "cc": g and g["cc"],
                 "vram_mib": g and g["total"], "vram_usable_mib": g and g["total"] - base,
                 "vram_free_mib": g and g["total"] - g["used"],
-                "ram_mib": round(psutil.virtual_memory().total / 2**20), "cpus": psutil.cpu_count(),
+                "ram_mib": host and host["total_mib"] or round(psutil.virtual_memory().total / 2**20),
+                "cpus": psutil.cpu_count(),
                 "disk_free": shutil.disk_usage(self.library.dir).free}
 
     def _context(self, hw):
