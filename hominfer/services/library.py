@@ -32,40 +32,43 @@ class Library:
     def has(self, rel):
         return (self.dir / rel).exists()
 
-    def used_by(self, p):
-        """Names of the models whose file (or engine's own weights) is p or inside p."""
-        p = str(p.resolve())
-        names = set()
+    def _uses(self):
+        """[(model name, resolved paths of its file and its engine's own weights)], resolved once per listing."""
+        out = []
         for m in self.registry.models.values():
             uses = [m["config"]["file"]] if m["config"].get("file") else []
             uses += [self.dir / u for u in self.registry.engines[m["engine_id"]].get("uses", [])]
-            if any(str(Path(f).resolve()) == p or str(Path(f).resolve()).startswith(p + "/") for f in uses):
-                names.add(m["name"])
-        return sorted(names)
+            out.append((m["name"], [str(Path(f).resolve()) for f in uses]))
+        return out
+
+    def used_by(self, p, uses=None):
+        """Names of the models whose file (or engine's own weights) is p or inside p."""
+        p = str(p.resolve())
+        return sorted({name for name, fs in uses or self._uses() if any(f == p or f.startswith(p + "/") for f in fs)})
 
     def items(self):
-        out = []
+        out, uses = [], self._uses()
         for p in sorted(self.dir.iterdir()):
             if p.name.startswith("."):
                 continue
             if p.name == HF_CACHE:
-                out += [self._cached_repo(d) for d in sorted(p.glob("models--*"))]
+                out += [self._cached_repo(d, uses) for d in sorted(p.glob("models--*"))]
             else:
-                out.append(self._entry(p))
+                out.append(self._entry(p, uses))
         return out
 
-    def _cached_repo(self, d):
+    def _cached_repo(self, d, uses):
         """A Hugging Face cache repo: snapshots are links to blobs (sometimes shared)."""
         ref = d / "refs" / "main"
         snaps = [f for f in d.glob("snapshots/*/**/*") if f.is_file()]
         return {"path": str(d.relative_to(self.dir)), "repo": d.name[8:].replace("--", "/"), "task": None,
                 "source": "hf_cache", "sha": ref.read_text()[:7] if ref.exists() else None,
                 "size": sum(f.stat().st_size for f in {f.resolve() for f in snaps}),
-                "date": _date(d.stat().st_mtime), "used_by": self.used_by(d),
+                "date": _date(d.stat().st_mtime), "used_by": self.used_by(d, uses),
                 "files": [{"name": "/".join(f.relative_to(d / "snapshots").parts[1:]), "quant": quant_of(f.name),
                            "size": f.stat().st_size} for f in snaps if f.name.endswith(WEIGHTS)]}
 
-    def _entry(self, p):
+    def _entry(self, p, uses):
         """A folder downloaded from the page (with its META) or a file / folder put by hand."""
         meta_f = p / META if (p / META).exists() else p / LEGACY_META
         meta = json.loads(meta_f.read_text()) if meta_f.exists() else None
@@ -77,10 +80,10 @@ class Library:
         return {"path": p.name, "repo": meta and meta["repo"], "source": "hf" if meta else "local",
                 "task": meta and meta.get("task"), "sha": meta and meta["sha"][:7],
                 "hf_date": meta and (meta.get("modified") or "")[:10],
-                "size": size_of(p), "date": _date(p.stat().st_mtime), "used_by": self.used_by(p),
+                "size": size_of(p), "date": _date(p.stat().st_mtime), "used_by": self.used_by(p, uses),
                 "files": [{"name": str(f.relative_to(p)) if f != p else f.name, "quant": quant_of(f.name),
                            "size": f.stat().st_size, "path": str(f.relative_to(self.dir)),
-                           "downloaded": downloaded(f), "used_by": self.used_by(f)} for f in files]}
+                           "downloaded": downloaded(f), "used_by": self.used_by(f, uses)} for f in files]}
 
     def path(self, rel):
         """A path under the models folder coming from the page: refuse anything outside it."""
@@ -93,8 +96,8 @@ class Library:
 
     def delete(self, rel):
         p = self.path(rel)
-        if self.used_by(p):
-            raise LaunchError(tr("lib.used_by", models=", ".join(self.used_by(p))))
+        if users := self.used_by(p):
+            raise LaunchError(tr("lib.used_by", models=", ".join(users)))
         if self.downloads.busy(p):
             raise LaunchError(tr("lib.downloading"))
         if p.parent == (self.dir / HF_CACHE).resolve():  # hf also cleans the shared blobs

@@ -12,3 +12,12 @@ def test_assets_with_their_type():
                                   "/index.html"])
 def test_nothing_outside_web_missing_or_not_an_asset(path):
     assert static.find(path) is None
+
+
+def test_etag_changes_with_the_file(tmp_path, monkeypatch):
+    monkeypatch.setattr(static.config, "WEB_DIR", tmp_path)
+    f = tmp_path / "a.js"
+    f.write_text("1")
+    first = static.find("/a.js")[2]
+    f.write_text("22")
+    assert static.find("/a.js")[2] != first

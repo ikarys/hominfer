@@ -32,12 +32,15 @@ def make_handler(app):
         def log_message(self, fmt, *args):
             pass
 
-        def _send(self, code, body, ctype="application/json; charset=utf-8"):
+        def _send(self, code, body, ctype="application/json; charset=utf-8", etag=None):
             data = body if isinstance(body, bytes) else json.dumps(body).encode()
             self.send_response(code)
             self.send_header("content-type", ctype)
             self.send_header("content-length", str(len(data)))
-            self.send_header("cache-control", "no-store")
+            # assets: always revalidated (no stale JS after an update), answered 304 when unchanged
+            self.send_header("cache-control", "no-cache" if etag else "no-store")
+            if etag:
+                self.send_header("etag", etag)
             self.end_headers()
             self.wfile.write(data)
 
@@ -73,7 +76,10 @@ def make_handler(app):
             found = static.find(path)
             if not found:
                 return self._send(404, {"error": tr("http.not_found")})
-            self._send(200, *found)
+            data, ctype, etag = found
+            if self.headers.get("if-none-match") == etag:
+                return self._send(304, b"", ctype, etag)
+            self._send(200, data, ctype, etag)
 
         def do_POST(self):
             if not host_allowed(self.headers.get("host")):
