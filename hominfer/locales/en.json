@@ -30,6 +30,9 @@
   "ui.sys.unified": "shared with RAM",
   "ui.sys.no_gpu": "no GPU detected (NVIDIA or AMD)",
   "ui.sys.cores": "{n} logical cores",
+  "ui.sys.wsl_models": "WSL (models)",
+  "ui.sys.win_gpu": "GPU memory reserved by Windows processes",
+  "ui.sys.win_gpu_over": "More GPU memory reserved than the card has: Windows swaps it, expect freezes. Close the biggest consumers.",
 
   "ui.state.stopped": "Stopped",
   "ui.state.starting": "Loading…",

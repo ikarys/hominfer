@@ -3,7 +3,7 @@ import { api } from "../api.js";
 import { bindCard, cardHtml, updateCard } from "../components/model-card.js";
 import { spark, track } from "../components/sparkline.js";
 import { $, esc } from "../dom.js";
-import { gb } from "../format.js";
+import { gb, size } from "../format.js";
 import { settings, t } from "../i18n.js";
 import { seg, state } from "../state.js";
 
@@ -79,11 +79,13 @@ function renderSystem(st) {
     const segs = vramSegments(st);
     $("#vramBar").innerHTML = segs.map(([, v, c]) => `<span style="width:${v / g.total * 100}%;background:${c}"></span>`).join("");
     $("#vramLegend").innerHTML = segs.map(([n, v, c]) => `<span><i style="background:${c}"></i>${esc(n)} ${gb(v)}</span>`).join("");
+    renderWindowsGpu(g);
     $("#gpuBig").textContent = g.util != null ? `${g.util} %` : "–";
     spark($("#gpuSpark"), track("gpu", g.util), 100, "var(--seg-1)");
     $("#gpuMeta").innerHTML = [g.temp != null && `<span class="${g.temp >= 83 ? "crit" : g.temp >= 75 ? "hot" : ""}">${g.temp} °C</span>`,
       g.power != null && `${Math.round(g.power)} W`].filter(Boolean).join(" · ");
   } else {
+    $("#winGpu").hidden = true;
     $("#vramBig").textContent = t("ui.sys.no_gpu");
   }
   $("#ramBig").innerHTML = `${gb(st.ram.used_mib)} <small>/ ${gb(st.ram.total_mib)}</small>`;
@@ -91,6 +93,17 @@ function renderSystem(st) {
   $("#cpuBig").textContent = Math.round(st.cpu.pct) + " %";
   spark($("#cpuSpark"), track("cpu", st.cpu.pct), 100, "var(--ok)");
   $("#cpuMeta").textContent = t("ui.sys.cores", { n: st.cpu.count });
+}
+
+// WSL: GPU memory reserved by Windows processes (the card is shared with them); over the card's size,
+// Windows pages it out and the machine freezes
+function renderWindowsGpu(g) {
+  const procs = g.processes || [], el = $("#winGpu");
+  el.hidden = !procs.length;
+  if (!procs.length) return;
+  const over = procs.reduce((n, p) => n + p.bytes, 0) / 2 ** 20 > g.total;
+  el.innerHTML = `${esc(t("ui.sys.win_gpu"))}: ` + procs.map(p => `${esc(p.name)} ${size(p.bytes)}`).join(" · ")
+    + (over ? `<div class="warn crit">${esc(t("ui.sys.win_gpu_over"))}</div>` : "");
 }
 
 // VRAM bar: system (display...), then each model, then whatever else uses it

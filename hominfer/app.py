@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from . import config
 from .infra import gpu
 from .infra.power import KeepAwake
+from .infra.wingpu import WindowsGpu
 from .services.catalog import Catalog
 from .services.downloads import Downloads
 from .services.engine_metrics import EngineMetrics
@@ -35,9 +36,12 @@ def build():
     models_dir = settings.models_dir
     registry = Registry(config.ENGINES_FILE, config.MODELS_FILE, listen_port=config.LISTEN_PORT)
     updates = Updates(registry, config.LOG_DIR)
+    win_gpu = WindowsGpu()
+    win_gpu.start()
     supervisor = Supervisor(registry, updates, gpu=gpu.query, keep_awake=KeepAwake(), log_dir=config.LOG_DIR,
                             models_dir=models_dir, default_baseline_mib=config.DEFAULT_BASELINE_MIB,
-                            gpu_mem=gpu.process_mib, engine_metrics=EngineMetrics(registry))
+                            gpu_mem=gpu.process_mib, engine_metrics=EngineMetrics(registry),
+                            win_gpu=win_gpu.processes)
     downloads = Downloads(models_dir, config.LOG_DIR)
     library = Library(models_dir, registry, downloads)
     catalog = Catalog(config.CATALOG_DIR, registry, config.LOG_DIR, models_dir)

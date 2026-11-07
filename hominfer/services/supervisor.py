@@ -22,13 +22,14 @@ from ..infra.files import tail
 
 class Supervisor:
     def __init__(self, registry, updates, *, gpu, keep_awake, log_dir, models_dir, default_baseline_mib,
-                 gpu_mem=None, engine_metrics=None):
+                 gpu_mem=None, engine_metrics=None, win_gpu=None):
         """gpu: () -> GPU state or None; keep_awake: .set(bool) holds off the host's sleep;
         models_dir: () -> the models folder (a setting);
         gpu_mem: (pids, pdev, unified) -> {pid: MiB}, the per-process GPU memory when the driver gives it (AMD);
-        engine_metrics: .collect(ids) -> {id: metrics} of the engines that expose some."""
+        engine_metrics: .collect(ids) -> {id: metrics} of the engines that expose some;
+        win_gpu: () -> [{name, bytes}] GPU memory reserved by Windows processes (WSL), or None."""
         self.registry, self.updates, self.gpu, self.keep_awake = registry, updates, gpu, keep_awake
-        self.gpu_mem, self.engine_metrics = gpu_mem, engine_metrics
+        self.gpu_mem, self.engine_metrics, self.win_gpu = gpu_mem, engine_metrics, win_gpu
         self.log_dir, self.models_dir, self.default_baseline_mib = log_dir, models_dir, default_baseline_mib
         self.lock = threading.RLock()
         self.poll_lock = threading.Lock()  # the loop and the HTTP actions both poll
@@ -110,10 +111,12 @@ class Supervisor:
         vm = psutil.virtual_memory()
         ram = {"used_mib": round((vm.total - vm.available) / 2**20), "total_mib": round(vm.total / 2**20)}
         self.last_gpu = gpu
+        win = self.win_gpu() if self.win_gpu else None
         self.snapshot = {
             "ready": True, "time": time.time(), "lan_ip": self.ip,
             "gpu": gpu and {k: v for k, v in gpu.items() if k not in ("pids", "pdev")} | {
-                "baseline": self.baseline_mib(), "baseline_measured": self.baseline is not None},
+                "baseline": self.baseline_mib(), "baseline_measured": self.baseline is not None}
+            | ({"processes": win} if win else {}),
             "ram": ram,
             "cpu": {"pct": self._cpu("machine", psutil.cpu_percent), "count": psutil.cpu_count() or 1},
             "models": models,

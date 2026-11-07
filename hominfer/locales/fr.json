@@ -30,6 +30,9 @@
   "ui.sys.unified": "partagée avec la RAM",
   "ui.sys.no_gpu": "aucun GPU détecté (NVIDIA ou AMD)",
   "ui.sys.cores": "{n} cœurs logiques",
+  "ui.sys.wsl_models": "WSL (modèles)",
+  "ui.sys.win_gpu": "Mémoire GPU réservée par les processus Windows",
+  "ui.sys.win_gpu_over": "Plus de mémoire GPU réservée que la carte n'en a : Windows la déborde sur la RAM, gels à prévoir. Fermez les plus gros consommateurs.",
 
   "ui.state.stopped": "Arrêté",
   "ui.state.starting": "Chargement…",
