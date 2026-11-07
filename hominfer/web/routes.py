@@ -76,7 +76,7 @@ def _download(app, body):
 
 
 def _install(app, cid):
-    gpu = app.supervisor.gpu()
+    gpu = app.supervisor.gpu_cached()
     app.catalog.install(cid, gpu and gpu["cc"])
     return OK
 

@@ -7,6 +7,7 @@ is detected by its process names, and can be stopped too.
 import sys
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import psutil
 
@@ -26,6 +27,9 @@ class Supervisor:
         self.registry, self.updates, self.gpu, self.keep_awake = registry, updates, gpu, keep_awake
         self.log_dir, self.models_dir, self.default_baseline_mib = log_dir, models_dir, default_baseline_mib
         self.lock = threading.RLock()
+        self.poll_lock = threading.Lock()  # the loop and the HTTP actions both poll
+        self.cpu_last = {}   # pid or "machine" -> (time, %): cpu_percent over a few ms is noise
+        self.last_gpu = None  # the poll's GPU state: requests read it instead of re-running nvidia-smi
         self.runs = {}       # started from here: id -> {popen, opts, vram_before, vram_load}
         self.errors = {}     # id -> message
         self.stopping = set()
@@ -56,8 +60,27 @@ class Supervisor:
                 print("poll:", e, file=sys.stderr)
             time.sleep(interval)
 
+    def gpu_cached(self):
+        """The GPU state of the last poll (<= one interval old); start() still queries it fresh."""
+        return self.last_gpu if self.snapshot["ready"] else self.gpu()
+
     def poll(self):
+        with self.poll_lock:
+            self._poll()
+
+    def _probe(self, procs):
+        """Health checks of the running models, in parallel and outside self.lock (start/stop stay responsive)."""
+        models = self.registry.models  # a reload swaps the dict: keep one view
+        up = [(mid, models[mid]) for mid, ps in procs.items() if ps and mid in models]
+        if not up:
+            return {}
+        with ThreadPoolExecutor(len(up)) as ex:
+            ok = ex.map(lambda m: net.http_ok(m["port"], m["health"]), (m for _, m in up))
+            return dict(zip((mid for mid, _ in up), ok))
+
+    def _poll(self):
         gpu, procs = self.gpu(), self.find()
+        healthy = self._probe(procs)
         running = any(procs.values())
         if gpu and baseline_ok(gpu["pids"], running, gpu["util"]):
             self.baseline = gpu["used"]
@@ -67,27 +90,29 @@ class Supervisor:
         allocated = bool(gpu) and (gpu["used"] - self.baseline_mib()) > 256
         on_gpu = on_gpu_for(procs, gpu["pids"], allocated) if gpu else {mid: False for mid in procs}
         with self.lock:
-            models = {mid: self._model_view(mid, m, procs.get(mid, []), gpu, on_gpu)
+            models = {mid: self._model_view(mid, m, procs.get(mid, []), gpu, on_gpu, healthy.get(mid, False))
                       for mid, m in self.registry.models.items()}
             alive = {p.pid for ps in procs.values() for p in ps}
             self.pcache = {pid: p for pid, p in self.pcache.items() if pid in alive}
+            self.cpu_last = {k: v for k, v in self.cpu_last.items() if k in alive or k == "machine"}
         # the VM's own memory under WSL: its cap (.wslconfig), not the host's RAM, bounds a model
         vm = psutil.virtual_memory()
         ram = {"used_mib": round((vm.total - vm.available) / 2**20), "total_mib": round(vm.total / 2**20)}
+        self.last_gpu = gpu
         self.snapshot = {
             "ready": True, "time": time.time(), "lan_ip": self.ip,
             "gpu": gpu and {k: v for k, v in gpu.items() if k != "pids"} | {
                 "baseline": self.baseline_mib(), "baseline_measured": self.baseline is not None},
             "ram": ram,
-            "cpu": {"pct": psutil.cpu_percent(None), "count": psutil.cpu_count() or 1},
+            "cpu": {"pct": self._cpu("machine", psutil.cpu_percent), "count": psutil.cpu_count() or 1},
             "models": models,
         }
         self.keep_awake.set(any(v["pids"] for v in models.values()))
 
-    def _model_view(self, mid, m, ps, gpu, on_gpu):
+    def _model_view(self, mid, m, ps, gpu, on_gpu, healthy):
         run = self._check_exit(mid, ps)
         state = model_state(stopping=mid in self.stopping, running=bool(ps), failed=mid in self.errors,
-                            healthy=bool(ps) and net.http_ok(m["port"], m["health"]))
+                            healthy=bool(ps) and healthy)
         if state == "ready" and run and run["vram_load"] is None and gpu and run["vram_before"] is not None:
             run["vram_load"] = max(0, gpu["used"] - run["vram_before"])
         vram, how = None, None
@@ -116,6 +141,15 @@ class Supervisor:
             return None
         return run
 
+    def _cpu(self, key, measure):
+        """measure() = % since its previous call: an HTTP action polling right after the loop
+        would get a ~0 ms window, so a measure younger than 1 s is reused instead."""
+        now, last = time.monotonic(), self.cpu_last.get(key)
+        if last and now - last[0] < 1:
+            return last[1]
+        self.cpu_last[key] = (now, measure(None))
+        return self.cpu_last[key][1]
+
     def _usage(self, ps):
         rss, cpu, started = 0, 0.0, None
         for p in ps:
@@ -123,7 +157,7 @@ class Supervisor:
             try:
                 with cp.oneshot():
                     rss += cp.memory_info().rss
-                    cpu += cp.cpu_percent(None)
+                    cpu += self._cpu(p.pid, cp.cpu_percent)
                     created = cp.create_time()
                     started = created if started is None else min(started, created)
             except psutil.Error:

@@ -39,6 +39,6 @@ def build():
     downloads = Downloads(models_dir, config.LOG_DIR)
     library = Library(models_dir, registry, downloads)
     catalog = Catalog(config.CATALOG_DIR, registry, config.LOG_DIR, models_dir)
-    hub = HubAdvisor(registry, catalog, library, gpu=gpu.query, baseline_mib=supervisor.baseline_mib)
+    hub = HubAdvisor(registry, catalog, library, gpu=supervisor.gpu_cached, baseline_mib=supervisor.baseline_mib)
     return App(settings, registry, updates, supervisor, ModelEditor(registry, supervisor), downloads, library,
                catalog, hub)
