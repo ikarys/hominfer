@@ -43,7 +43,15 @@ def test_engine_declared_but_not_installed():
 
 
 def test_gpu_too_old_for_the_quantization():
-    assert verdict(GB, quant="NVFP4", ctx=context(hw=HW | {"cc": 8.6})) == "incompatible"
+    st = {"v": make_engine(file_ext=[".safetensors"])}
+    assert verdict(GB, "safetensors", "NVFP4", context(st, hw=HW | {"cc": 8.6})) == "incompatible"
+    assert verdict(GB, "safetensors", "FP8", context(st, hw=HW | {"cc": None})) == "incompatible"
+    assert verdict(GB, quant="MXFP4", ctx=context(hw=HW | {"cc": None})) == "gpu"  # GGUF: llama.cpp dequantizes
+
+
+def test_unified_memory_has_no_ram_to_offload_to():
+    assert verdict(40 * GB, ctx=context(hw=HW | {"unified": True})) == "no"
+    assert verdict(10 * GB, ctx=context(hw=HW | {"unified": True})) == "gpu"
 
 
 def test_not_enough_disk():

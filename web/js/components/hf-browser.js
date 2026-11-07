@@ -9,7 +9,8 @@ import { installButton } from "./engine-catalog.js";
 export function hardwareLine(hw) {
   if (!hw.gpu) return t("ui.hf.no_gpu");
   return t("ui.hf.hardware", { gpu: hw.gpu.replace("NVIDIA GeForce ", ""), vram: size(hw.vram_mib * 2 ** 20),
-    usable: size(hw.vram_usable_mib * 2 ** 20), cc: hw.cc, ram: size(hw.ram_mib * 2 ** 20), cpus: hw.cpus,
+    usable: size(hw.vram_usable_mib * 2 ** 20),
+    gen: hw.cc ? "· " + t("ui.hf.generation", { cc: hw.cc }) : hw.unified ? "· " + t("ui.sys.unified") : "", ram: size(hw.ram_mib * 2 ** 20), cpus: hw.cpus,
     disk: size(hw.disk_free) });
 }
 

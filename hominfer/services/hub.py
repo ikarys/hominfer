@@ -18,7 +18,7 @@ class HubAdvisor:
 
     def hardware(self):
         g, base = self.gpu(), self.baseline_mib()
-        return {"gpu": g and g["name"], "vendor": g and g["vendor"], "cc": g and g["cc"],
+        return {"gpu": g and g["name"], "vendor": g and g["vendor"], "cc": g and g["cc"], "unified": bool(g and g["unified"]),
                 "vram_mib": g and g["total"], "vram_usable_mib": g and g["total"] - base,
                 "vram_free_mib": g and g["total"] - g["used"],
                 "ram_mib": round(psutil.virtual_memory().total / 2**20),  # under WSL: the VM's cap

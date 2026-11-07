@@ -13,7 +13,7 @@ from .model import vram_estimate
 SHARD = re.compile(r"-\d{5}-of-\d{5}")
 QUANT = re.compile(r"(?i)(?<![a-z0-9])(i?q\d(?:_[a-z0-9]+)*|p?t?q\d_\d|nvfp4|mxfp4|fp8|fp16|bf16|f16|f32|int[48]|awq"
                    r"|gptq|exl2|\d+(?:\.\d+)?bpw)(?![a-z0-9])")
-MIN_CC = {"NVFP4": 10.0, "MXFP4": 10.0, "FP8": 8.9}  # minimum GPU generation for these formats
+MIN_CC = {"NVFP4": 10.0, "MXFP4": 10.0, "FP8": 8.9}  # minimum NVIDIA generation (vLLM kernels; GGUF dequantizes)
 SMALL_FILES = (".json", ".txt", ".model", ".jinja", ".py")  # config / tokenizer of a safetensors repo
 
 
@@ -21,7 +21,7 @@ SMALL_FILES = (".json", ".txt", ".model", ".jinja", ".py")  # config / tokenizer
 class Context:
     """What the rules need to know about this machine."""
     engines: dict                          # normalized engines.json
-    hw: dict                               # cc, vram_usable_mib, vram_free_mib, ram_mib, disk_free
+    hw: dict                               # cc, unified, vram_usable_mib, vram_free_mib, ram_mib, disk_free
     installed: Callable[[str], bool]       # engine id -> its files are present
     lib_has: Callable[[str], bool]         # path under the models dir -> exists
     suggest: Callable = field(default=lambda fmt, kind, repo: None)  # catalog engine to install
@@ -51,7 +51,9 @@ def fit(size, fmt, quant, ctx, repo=None, kind=None):
         return "incompatible", tr("fit.wrong_kind", kind=kind_labels().get(kind, kind), engines=labels)
     if not any(ctx.installed(eid) for eid in fitting):
         return "incompatible", tr("fit.not_installed", fmt=fmt, engine=loc(ctx.engines[fitting[0]]["label"]))
-    if quant in MIN_CC and (hw["cc"] or 0) < MIN_CC[quant]:
+    if fmt != "gguf" and quant in MIN_CC and (hw["cc"] or 0) < MIN_CC[quant]:
+        if not hw["cc"]:
+            return "incompatible", tr("fit.nvidia_only", quant=quant, cc=MIN_CC[quant])
         return "incompatible", tr("fit.min_cc", quant=quant, cc=MIN_CC[quant], gpu_cc=hw["cc"])
     if size > hw["disk_free"]:
         return "disk", tr("fit.disk", size=gib(size / 2**20), free=gib(hw["disk_free"] / 2**20))
@@ -59,6 +61,8 @@ def fit(size, fmt, quant, ctx, repo=None, kind=None):
     if need <= usable:
         busy = tr("fit.busy") if need > (hw["vram_free_mib"] or 0) else ""
         return "gpu", tr("fit.gpu", need=gib(need), usable=gib(usable), busy=busy)
+    if hw.get("unified"):  # the GPU memory already is the RAM: no offload left to fall back on
+        return "no", tr("fit.no_unified", need=gib(need), usable=gib(usable))
     if fmt == "gguf" and need <= usable + hw["ram_mib"] * 0.7:
         return "partial", tr("fit.partial", need=gib(need), usable=gib(usable))
     return "no", tr("fit.no_ram" if fmt == "gguf" else "fit.no", need=gib(need), usable=gib(usable))
