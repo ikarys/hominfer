@@ -81,6 +81,13 @@ def _install(app, cid):
     return OK
 
 
+def _engine_params(app, eid, body):
+    if eid not in app.registry.engines:
+        raise NotFound
+    app.registry.set_param_defaults(eid, body)  # {param: default}, "" removes the default
+    return OK
+
+
 def _do(action):
     """A handler running action(app) and answering {"ok": true}."""
     def handler(app, match, body):
@@ -103,6 +110,7 @@ ROUTES = [
     Route("POST", re.compile(r"/api/hf/download"), lambda app, m, b: _download(app, b)),
     Route("POST", re.compile(r"/api/hf/cancel/(\d+)"), _do(lambda app, m, b: app.downloads.cancel(int(m[1])))),
     Route("POST", re.compile(r"/api/hf/dismiss/(\d+)"), _do(lambda app, m, b: app.downloads.dismiss(int(m[1])))),
+    Route("POST", re.compile(r"/api/engines/([\w.-]+)/params"), lambda app, m, b: _engine_params(app, m[1], b)),
     Route("POST", re.compile(r"/api/engines/install/([\w.-]+)"), lambda app, m, b: _install(app, m[1])),
     Route("POST", re.compile(r"/api/library/delete"), _do(lambda app, m, b: app.library.delete(str(b.get("path", ""))))),
     Route("POST", re.compile(r"/api/reload"), _do(lambda app, m, b: app.registry.reload_models())),

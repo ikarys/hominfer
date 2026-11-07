@@ -59,6 +59,16 @@ class Registry:
             self.reload_engines()
             return True
 
+    def set_param_defaults(self, eid, changes):
+        """Set (or, with "", remove) defaults of existing params of an engine in engines.json, all or
+        nothing. Running models keep their command line: the next start uses the new defaults."""
+        with self.lock:
+            raw = read_json(self.engines_file, {})
+            for key, value in changes.items():
+                raw = engine_rules.with_default(raw, eid, key, value)
+            write_atomic(self.engines_file, compact_json(raw) + "\n")
+            self.reload_engines()
+
     # -- models
     def vram_need(self, c):
         """VRAM to have free before starting (a guard only: the engine takes what it needs).

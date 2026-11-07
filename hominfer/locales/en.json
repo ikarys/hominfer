@@ -293,5 +293,12 @@
   "eng.failed": "Failed (code {code}): see the log.",
   "eng.not_registered": "Installed, but engines.json not updated: {err}",
   "eng.kept": "Installed. \"{id}\" was already in engines.json: left as is.",
-  "eng.registered": "Installed and added to engines.json: it is offered in the model form."
+  "eng.registered": "Installed and added to engines.json: it is offered in the model form.",
+  "ui.eng.settings_title": "Engine settings",
+  "ui.eng.settings_sub": "default values used when a model does not set the param. The command is read-only (edit engines.json).",
+  "ui.eng.not_installed": "not installed",
+  "ui.eng.no_default": "no default",
+  "ui.eng.reset": "Reset",
+  "ui.eng.reset_named": "Reset {label}",
+  "ui.eng.saved": "Saved. Running models are not affected; the next start uses the new defaults."
 }

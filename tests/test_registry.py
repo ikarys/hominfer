@@ -37,3 +37,20 @@ def test_models_sharing_an_engine_need_match_file(tmp_path):
         registry(tmp_path)
     (tmp_path / "engines.json").write_text(json.dumps({"test": ENGINE | {"match_file": True}}))
     assert set(registry(tmp_path).models) == {"a", "b"}
+
+
+def test_set_param_defaults_writes_only_the_default(tmp_path):
+    import pytest
+    from hominfer.errors import LaunchError
+    engine = ENGINE | {"params": {"ctx": {"label": "Context"}}, "command": [*ENGINE["command"], "{ctx}"]}
+    (tmp_path / "engines.json").write_text(json.dumps({"test": engine}))
+    r = registry(tmp_path)
+    r.set_param_defaults("test", {"ctx": "8192"})
+    assert r.engines["test"]["params"]["ctx"]["default"] == "8192"
+    assert json.loads((tmp_path / "engines.json").read_text()) == {
+        "test": engine | {"params": {"ctx": {"label": "Context", "default": "8192"}}}}
+    with pytest.raises(LaunchError):  # all or nothing
+        r.set_param_defaults("test", {"ctx": "1", "command": "rm"})
+    assert r.engines["test"]["params"]["ctx"]["default"] == "8192"
+    r.set_param_defaults("test", {"ctx": ""})
+    assert "default" not in r.engines["test"]["params"]["ctx"]

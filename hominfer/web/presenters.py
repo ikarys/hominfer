@@ -1,4 +1,5 @@
 """Service data -> JSON for the page (config texts in the UI language)."""
+from ..domain.engine import flat
 from ..domain.kinds import TASK_KIND, kind_labels
 from ..i18n import loc
 
@@ -32,5 +33,9 @@ def library(app):
 def engines(app):
     gpu = app.supervisor.gpu_cached()
     return {"catalog": app.catalog.status(gpu),
-            "configured": {eid: {"label": loc(e["label"]), "installed": app.registry.installed(eid)}
+            "configured": {eid: {"label": loc(e["label"]), "installed": app.registry.installed(eid),
+                                 "command": " ".join(flat(e["command"])),
+                                 "params": [{"key": k, "label": loc(p["label"]), "default": p.get("default", ""),
+                                             "values": _choices(p["values"]) if "values" in p else None}
+                                            for k, p in e["params"].items()]}
                            for eid, e in app.registry.engines.items()}}

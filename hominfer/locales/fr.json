@@ -293,5 +293,12 @@
   "eng.failed": "Échec (code {code}) : voir le log.",
   "eng.not_registered": "Installé, mais engines.json non mis à jour : {err}",
   "eng.kept": "Installé. « {id} » était déjà dans engines.json : laissé tel quel.",
-  "eng.registered": "Installé et ajouté à engines.json : il est proposé dans le formulaire des modèles."
+  "eng.registered": "Installé et ajouté à engines.json : il est proposé dans le formulaire des modèles.",
+  "ui.eng.settings_title": "Réglages des moteurs",
+  "ui.eng.settings_sub": "valeurs par défaut utilisées quand un modèle ne fixe pas le paramètre. La commande est en lecture seule (à modifier dans engines.json).",
+  "ui.eng.not_installed": "non installé",
+  "ui.eng.no_default": "aucune valeur par défaut",
+  "ui.eng.reset": "Réinitialiser",
+  "ui.eng.reset_named": "Réinitialiser {label}",
+  "ui.eng.saved": "Enregistré. Les modèles en cours ne sont pas affectés ; le prochain démarrage utilisera les nouvelles valeurs."
 }

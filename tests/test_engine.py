@@ -80,3 +80,30 @@ def test_normalize():
     e = engine_rules.normalize({"command": ["x"], "params": {"ctx": "Context"}, "repo": "~/src"})
     assert e["params"] == {"ctx": {"label": "Context"}}
     assert e["needs_file"] is False and e["repo"] == str(Path.home() / "src")
+
+
+RAW = {"test": {"label": "T", "command": ["/bin/serve", "{ctx}", "{vision}"], "env": {"A": "b"}, "procs": ["serve"],
+                "params": {"ctx": {"label": "Context"}, "name": "Name",
+                           "vision": {"label": "V", "default": "on", "values": [["on", "On"], ["off", "Off"]]}}}}
+
+
+def test_with_default_sets_and_keeps_the_rest():
+    out = engine_rules.with_default(RAW, "test", "ctx", "8192")
+    assert out["test"]["params"]["ctx"] == {"label": "Context", "default": "8192"}
+    assert out["test"]["command"] == RAW["test"]["command"] and out["test"]["env"] == {"A": "b"}
+    assert list(out["test"]["params"]) == ["ctx", "name", "vision"]
+    assert "default" not in RAW["test"]["params"]["ctx"]  # input untouched
+    assert engine_rules.with_default(RAW, "test", "name", "x")["test"]["params"]["name"] == {"label": "Name", "default": "x"}
+
+
+def test_with_default_empty_removes():
+    out = engine_rules.with_default(RAW, "test", "vision", "")
+    assert out["test"]["params"]["vision"] == {"label": "V", "values": [["on", "On"], ["off", "Off"]]}
+
+
+@pytest.mark.parametrize("eid,key,value", [
+    ("nope", "ctx", "1"), ("test", "command", "1"), ("test", "ctx", "a\nb"), ("test", "ctx", "a\x00"),
+    ("test", "ctx", "x" * 201), ("test", "ctx", 5), ("test", "vision", "maybe")])
+def test_with_default_rejects(eid, key, value):
+    with pytest.raises(LaunchError):
+        engine_rules.with_default(RAW, eid, key, value)

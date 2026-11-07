@@ -64,6 +64,32 @@ def normalize(e):
     return e
 
 
+MAX_DEFAULT = 200
+
+
+def with_default(raw, eid, key, value):
+    """Raw engines.json content -> a copy where param `key` of engine `eid` has the default `value`
+    ("" removes it). Only that field can change: the page never edits a command or an env."""
+    def need(cond, msg_key, /, **kw):
+        if not cond:
+            raise LaunchError(tr(msg_key, **kw))
+    need(eid in raw, "cfg.unknown_engine", engines=", ".join(raw))
+    params = raw[eid].get("params", {})
+    need(key in params, "cfg.unknown_param", engine=eid, key=key, params=", ".join(params))
+    need(isinstance(value, str) and len(value) <= MAX_DEFAULT and not any(ord(c) < 32 or ord(c) == 127 for c in value),
+         "cfg.bad_value", key=key, value=repr(value)[:40])
+    spec = params[key]
+    allowed = [v[0] if isinstance(v, list) else v for v in spec.get("values", [])] if isinstance(spec, dict) else []
+    need(not value or not allowed or value in allowed, "cfg.value_not_allowed",
+         key=key, value=value, allowed=", ".join(allowed))
+    spec = dict(spec) if isinstance(spec, dict) else {"label": spec}
+    if value:
+        spec["default"] = value
+    else:
+        spec.pop("default", None)
+    return {**raw, eid: {**raw[eid], "params": {**params, key: spec}}}
+
+
 def build_command(e, mid, model, params, *, vram_need, free_vram, models_dir):
     """Engine + models.json entry + chosen params -> (argv, env, VRAM to reserve).
 

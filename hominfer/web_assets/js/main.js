@@ -9,6 +9,7 @@ import { state } from "./state.js";
 import { buildCards, poll } from "./views/dashboard.js";
 import { bindLibrary, loadLibrary } from "./views/library.js";
 import { bindModelsTable, renderModelsTable } from "./views/models-table.js";
+import { bindEngineSettings, loadEngineSettings } from "./components/engine-settings.js";
 import { bindSettings } from "./views/settings.js";
 
 const VIEWS = { "/": "home", "/models": "manage", "/modeles": "manage", "/settings": "settings" };
@@ -33,10 +34,11 @@ bindEngineCatalog();
 bindHfBrowser();
 bindLibrary();
 bindSettings();
+bindEngineSettings();
 bindFolderPicker();
 document.body.classList.add("page-" + VIEW);
 document.querySelector(`.nav [data-view="${VIEW}"]`)?.classList.add("on");
 
 await reloadModels();
 if (VIEW === "home") setInterval(() => document.hidden || poll(), POLL_MS);
-if (VIEW === "settings") loadEngines();
+if (VIEW === "settings") { loadEngines(); loadEngineSettings(); }
