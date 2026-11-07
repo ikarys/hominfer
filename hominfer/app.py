@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from . import config
 from .infra import gpu
-from .infra.windows import KeepAwake
+from .infra.power import KeepAwake
 from .services.catalog import Catalog
 from .services.downloads import Downloads
 from .services.hub import HubAdvisor

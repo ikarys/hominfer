@@ -1,4 +1,4 @@
-"""Windows host (WSL interop): keep the machine awake while a model is loaded."""
+"""Keep the machine awake while a model is loaded: Windows host via WSL interop, else systemd-logind."""
 import os
 import shutil
 import subprocess
@@ -16,19 +16,29 @@ def _powershell():
     return shutil.which("powershell.exe", path=path)
 
 
+def _command():
+    """Under WSL only Windows decides on sleep (an inhibitor inside the VM is ignored)."""
+    if ps := _powershell():
+        return [ps, "-NoProfile", "-NonInteractive", "-Command", _NO_SLEEP]
+    if inhibit := shutil.which("systemd-inhibit"):  # native Linux: held until cat sees EOF
+        return [inhibit, "--what=sleep:idle", "--who=hominfer", "--why=model loaded", "cat"]
+    return None
+
+
 class KeepAwake:
-    """No-op outside WSL or with interop disabled."""
+    """No-op without WSL interop nor systemd-inhibit."""
 
     def __init__(self):
-        self.powershell = _powershell()
+        self.argv = _command()
         self.proc = None
 
     def set(self, on):
-        if not self.powershell or on == (self.proc is not None and self.proc.poll() is None):
+        if not self.argv or on == (self.proc is not None and self.proc.poll() is None):
             return
         if on:  # released when the process ends, including when the launcher dies (stdin closes)
-            self.proc = subprocess.Popen([self.powershell, "-NoProfile", "-NonInteractive", "-Command", _NO_SLEEP],
-                                         stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            # ponytail: a refused inhibitor (polkit) exits at once and is retried on the next set(True)
+            self.proc = subprocess.Popen(self.argv, stdin=subprocess.PIPE,
+                                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         else:
             self.proc.stdin.close()  # EOF -> PowerShell exits and Windows may sleep again
             self.proc = None
