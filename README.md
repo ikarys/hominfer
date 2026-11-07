@@ -27,7 +27,7 @@ Linux / WSL2, NVIDIA.
 - **Library**: every model file of your models folder, which model uses it, and cleanup
 - **Settings**: UI language (English, French), theme (auto, light, dark, cyber, pixel, neo), models folder
 - Port conflict detection; the models the launcher started stop with it
-- Under WSL, Windows doesn't go to sleep while a model is loaded
+- The machine doesn't go to sleep while a model is loaded (Windows under WSL, systemd-logind on Linux)
 
 | Models | Settings |
 |---|---|
