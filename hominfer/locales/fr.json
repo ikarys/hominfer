@@ -300,5 +300,8 @@
   "ui.eng.no_default": "aucune valeur par défaut",
   "ui.eng.reset": "Réinitialiser",
   "ui.eng.reset_named": "Réinitialiser {label}",
-  "ui.eng.saved": "Enregistré. Les modèles en cours ne sont pas affectés ; le prochain démarrage utilisera les nouvelles valeurs."
+  "ui.eng.saved": "Enregistré. Les modèles en cours ne sont pas affectés ; le prochain démarrage utilisera les nouvelles valeurs.",
+  "settings.bad_favorites": "Favoris : une liste d'identifiants de modèles est attendue.",
+  "ui.card.fav": "Favori : affiché en premier et par défaut",
+  "ui.card.unfav": "Retirer des favoris"
 }

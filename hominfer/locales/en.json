@@ -300,5 +300,8 @@
   "ui.eng.no_default": "no default",
   "ui.eng.reset": "Reset",
   "ui.eng.reset_named": "Reset {label}",
-  "ui.eng.saved": "Saved. Running models are not affected; the next start uses the new defaults."
+  "ui.eng.saved": "Saved. Running models are not affected; the next start uses the new defaults.",
+  "settings.bad_favorites": "Favourites: a list of model ids is expected.",
+  "ui.card.fav": "Favourite: listed first and shown by default",
+  "ui.card.unfav": "Remove from favourites"
 }

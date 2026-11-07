@@ -4,14 +4,17 @@ import { bindCard, cardHtml, updateCard } from "../components/model-card.js";
 import { spark, track } from "../components/sparkline.js";
 import { $, esc } from "../dom.js";
 import { gb } from "../format.js";
-import { t } from "../i18n.js";
+import { settings, t } from "../i18n.js";
 import { seg, state } from "../state.js";
 
 let rendered = false;  // first render done: from then on, don't switch the card shown per kind
 
+const isFav = id => settings.favorites.includes(id);
+
 export function buildCards(show) {
   const byKind = {};
   for (const [id, m] of Object.entries(state.models)) (byKind[m.kind ??= id] ??= []).push(id);
+  for (const ids of Object.values(byKind)) ids.sort((a, b) => isFav(b) - isFav(a));  // stable: favourites first
   if (!Object.keys(byKind).length) {
     $("#cards").innerHTML = emptyHtml();
     return;
@@ -20,16 +23,31 @@ export function buildCards(show) {
     <div class="kind">
       <div class="kind-head">
         <h3>${esc(state.kinds[kind] || kind)}</h3>
+        <button type="button" class="fav" data-fav="${esc(kind)}">★</button>
         <select data-kind="${esc(kind)}">${ids.map(id =>
-          `<option value="${id}">${esc(state.models[id].name)}</option>`).join("")}</select>
+          `<option value="${id}">${isFav(id) ? "★ " : ""}${esc(state.models[id].name)}</option>`).join("")}</select>
       </div>
       ${ids.map((id, i) => cardHtml(id, state.models[id], i > 0)).join("")}
     </div>`).join("");
   document.querySelectorAll("[data-kind]").forEach(sel =>
     sel.addEventListener("change", () => showModel(sel.dataset.kind, sel.value)));
+  document.querySelectorAll("[data-fav]").forEach(btn =>
+    btn.addEventListener("click", () => toggleFav($(`[data-kind="${btn.dataset.fav}"]`).value)));
   Object.keys(state.models).forEach(bindCard);
   rendered = !!show;
+  for (const [kind, ids] of Object.entries(byKind)) showModel(kind, ids[0]);
   if (show && state.models[show]) showModel(state.models[show].kind, show);
+}
+
+// star on the kind header: the shown model becomes (or stops being) a favourite, saved in settings.json
+async function toggleFav(id) {
+  const favorites = isFav(id) ? settings.favorites.filter(f => f !== id) : [...settings.favorites, id];
+  try {
+    await api("/api/settings", { favorites });
+    settings.favorites = favorites;
+    buildCards(id);
+    if (state.last) render(state.last);
+  } catch (err) { $("#conn").textContent = err.message; }
 }
 
 // first run: no model yet, say where to start
@@ -45,6 +63,9 @@ const emptyHtml = () => `
 
 function showModel(kind, id) {
   $(`[data-kind="${kind}"]`).value = id;
+  const fav = $(`[data-fav="${kind}"]`);
+  fav.setAttribute("aria-pressed", isFav(id));
+  fav.title = fav.ariaLabel = t(isFav(id) ? "ui.card.unfav" : "ui.card.fav");
   for (const [mid, m] of Object.entries(state.models)) if (m.kind === kind) $("#card-" + mid).hidden = mid !== id;
 }
 
@@ -98,7 +119,7 @@ function render(st) {
     const opt = $(`[data-kind="${m.kind}"] option[value="${id}"]`);
     if (opt) {
       const running = s.pids.length > 0;
-      opt.textContent = m.name + (running ? " ●" : "");
+      opt.textContent = (isFav(id) ? "★ " : "") + m.name + (running ? " ●" : "");
       if (!rendered && running) showModel(m.kind, id);
     }
   }

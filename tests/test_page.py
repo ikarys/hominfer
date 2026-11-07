@@ -21,7 +21,7 @@ DYNAMIC = {"ui.theme.": ["auto", "light", "dark", "cyber", "pixel", "neo"],
 
 class FakeSettings:
     def __init__(self, lang, theme="cyber"):
-        self.values = {"lang": lang, "theme": theme, "models_dir": "~/hominfer_models"}
+        self.values = {"lang": lang, "theme": theme, "models_dir": "~/hominfer_models", "favorites": []}
 
 
 def page_literals():

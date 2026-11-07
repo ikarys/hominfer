@@ -15,7 +15,7 @@ def path(tmp_path):
 
 def test_defaults_without_a_file(path):
     s = Settings(path)
-    assert s.values == DEFAULTS
+    assert s.values == DEFAULTS | {"favorites": []}
     assert s.models_dir() == Path(DEFAULTS["models_dir"]).expanduser()
 
 
@@ -38,6 +38,9 @@ def test_models_dir_accepts_home_paths(path):
     ({"theme": "pink"}, "Unknown theme"),
     ({"models_dir": "relative/models"}, "absolute path"),
     ({"models_dir": "  "}, "absolute path"),
+    ({"favorites": "qwen"}, "list of model ids"),
+    ({"favorites": ["../x"]}, "list of model ids"),
+    ({"favorites": [1]}, "list of model ids"),
 ])
 def test_update_rejects(path, change, message):
     s = Settings(path)
@@ -55,4 +58,12 @@ def test_models_dir_cant_move_during_a_download(path, tmp_path):
 
 def test_invalid_file_values_fall_back_to_defaults(path):
     path.write_text(json.dumps({"lang": "xx", "theme": "pink", "models_dir": "relative"}))
-    assert Settings(path).values == DEFAULTS
+    assert Settings(path).values == DEFAULTS | {"favorites": []}
+
+
+def test_favorites_are_saved_without_duplicates(path):
+    s = Settings(path)
+    s.update({"favorites": ["qwen", "gemma", "qwen"]})
+    assert Settings(path).values["favorites"] == ["qwen", "gemma"]
+    path.write_text(json.dumps({"favorites": "bad"}))
+    assert Settings(path).values["favorites"] == []
