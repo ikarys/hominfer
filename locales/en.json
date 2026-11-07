@@ -20,7 +20,6 @@
 
   "ui.sys.ram": "RAM",
   "ui.sys.ram_hint": "system memory",
-  "ui.sys.ram_hint_host": "the Windows host's memory (queried through WSL)",
   "ui.sys.free": "free {size}",
   "ui.sys.baseline": "System",
   "ui.sys.other": "other",

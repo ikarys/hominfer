@@ -15,7 +15,7 @@ from ..domain.model import clean_options
 from ..domain.status import baseline_ok, model_state, model_vram, on_gpu_for
 from ..errors import LaunchError
 from ..i18n import gib, tr
-from ..infra import net, processes, windows
+from ..infra import net, processes
 from ..infra.files import tail
 
 
@@ -71,11 +71,9 @@ class Supervisor:
                       for mid, m in self.registry.models.items()}
             alive = {p.pid for ps in procs.values() for p in ps}
             self.pcache = {pid: p for pid, p in self.pcache.items() if pid in alive}
-        host = windows.host_memory()  # outside WSL: None -> the VM's own /proc/meminfo
+        # the VM's own memory under WSL: its cap (.wslconfig), not the host's RAM, bounds a model
         vm = psutil.virtual_memory()
-        ram = host | {"source": "host"} if host else \
-            {"used_mib": round((vm.total - vm.available) / 2**20), "total_mib": round(vm.total / 2**20),
-             "source": "wsl"}
+        ram = {"used_mib": round((vm.total - vm.available) / 2**20), "total_mib": round(vm.total / 2**20)}
         self.snapshot = {
             "ready": True, "time": time.time(), "lan_ip": self.ip,
             "gpu": gpu and {k: v for k, v in gpu.items() if k != "pids"} | {
