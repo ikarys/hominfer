@@ -29,33 +29,36 @@ class Catalog:
         found = is_installed(c["engine"]) or c.get("detect") and (Path(expand(c["dir"])) / c["detect"]).exists()
         return "present" if found else "available"
 
-    def compat(self, cid, gpu_cc):
-        need = self.entries[cid].get("min_cc")
-        if need and (gpu_cc or 0) < need:
-            return False, tr("eng.min_cc", cc=need, gpu_cc=gpu_cc)
+    def compat(self, cid, gpu):
+        """gpu: {"vendor", "cc"...} or None. "gpu" lists the vendors a recipe builds for (none: any)."""
+        c, vendor, cc = self.entries[cid], gpu and gpu.get("vendor"), gpu and gpu.get("cc")
+        if c.get("gpu") and vendor not in c["gpu"]:
+            return False, tr("eng.gpu_vendor", vendors=" / ".join(v.upper() for v in c["gpu"]))
+        if c.get("min_cc") and (cc or 0) < c["min_cc"]:
+            return False, tr("eng.min_cc", cc=c["min_cc"], gpu_cc=cc)
         return True, ""
 
-    def suggest(self, fmt, kind, repo, gpu_cc):
+    def suggest(self, fmt, kind, repo, gpu):
         """Catalog engine that would run this model, if it isn't set up yet."""
         for cid, c in self.entries.items():
             e = c["engine"]
             runs = repo in e.get("provides_repos", []) or (
                 f".{fmt}" in e.get("file_ext", []) and (kind is None or kind in e.get("kinds", [kind])))
-            if runs and self.state(cid) != "configured" and self.compat(cid, gpu_cc)[0]:
+            if runs and self.state(cid) != "configured" and self.compat(cid, gpu)[0]:
                 return {"id": cid, "label": loc(c["label"]), "disk_gb": c["disk_gb"], "minutes": c["minutes"],
                         "state": self.state(cid)}
         return None
 
-    def install(self, cid, gpu_cc):
+    def install(self, cid, gpu):
         if cid not in self.entries:
             raise LaunchError(tr("eng.unknown"))
-        ok, why = self.compat(cid, gpu_cc)
+        ok, why = self.compat(cid, gpu)
         if not ok:
             raise LaunchError(why)
         c = self.entries[cid]
 
         def work(job):
-            env = {"INSTALL_DIR": expand(c["dir"]), "MODELS_DIR": str(self.models_dir()), "GPU_CC": str(gpu_cc or "")}
+            env = {"INSTALL_DIR": expand(c["dir"]), "MODELS_DIR": str(self.models_dir()), "GPU_CC": str(gpu and gpu.get("cc") or "")}
             code = job.run(["bash", str(self.dir / c["script"])], env=env, cwd=self.dir)
             if code:
                 raise LaunchError(tr("eng.failed", code=code))
@@ -67,11 +70,11 @@ class Catalog:
         self.jobs.start(cid, self.log_dir / f"engine-{cid}.log", work, busy_msg=tr("eng.running"),
                         msg=tr("eng.installing", dir=c["dir"]))
 
-    def status(self, gpu_cc):
+    def status(self, gpu):
         out = []
         for cid, c in self.entries.items():
             e, job = c["engine"], self.jobs.get(cid)
-            ok, why = self.compat(cid, gpu_cc)
+            ok, why = self.compat(cid, gpu)
             out.append({"id": cid, "label": loc(c["label"]), "desc": loc(c["desc"]), "url": c["url"],
                         "dir": c["dir"], "disk_gb": c["disk_gb"], "minutes": c["minutes"],
                         "kinds": e.get("kinds", []), "file_ext": e.get("file_ext", []),

@@ -284,6 +284,7 @@
 
   "eng.unknown": "Engine not in the catalog.",
   "eng.min_cc": "Needs a GPU of generation {cc}+, yours is {gpu_cc}.",
+  "eng.gpu_vendor": "Needs an {vendors} GPU.",
   "eng.running": "Installation already running.",
   "eng.installing": "Installing in {dir}…",
   "eng.failed": "Failed (code {code}): see the log.",

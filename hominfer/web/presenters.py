@@ -31,6 +31,6 @@ def library(app):
 
 def engines(app):
     gpu = app.supervisor.gpu_cached()
-    return {"catalog": app.catalog.status(gpu and gpu["cc"]),
+    return {"catalog": app.catalog.status(gpu),
             "configured": {eid: {"label": loc(e["label"]), "installed": app.registry.installed(eid)}
                            for eid, e in app.registry.engines.items()}}

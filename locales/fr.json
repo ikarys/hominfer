@@ -284,6 +284,7 @@
 
   "eng.unknown": "Moteur inconnu du catalogue.",
   "eng.min_cc": "Demande un GPU de génération {cc}+, le tien est en {gpu_cc}.",
+  "eng.gpu_vendor": "Nécessite un GPU {vendors}.",
   "eng.running": "Installation déjà en cours.",
   "eng.installing": "Installation dans {dir}…",
   "eng.failed": "Échec (code {code}) : voir le log.",

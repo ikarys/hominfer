@@ -10,6 +10,7 @@
     "script": "llama.cpp.sh",
     "disk_gb": 3,
     "minutes": 15,
+    "gpu": ["nvidia"],
     "engine": {
       "label": "llama.cpp",
       "kinds": ["llm"],
@@ -21,6 +22,41 @@
       "procs": ["llama-server"],
       "match_file": true,
       "repo": "~/llm/llama.cpp",
+      "build": ["cmake", "--build", "build", "--target", "llama-server"],
+      "binary": "build/bin/llama-server",
+      "params": {
+        "ctx": {"label": {"en": "Context (total, shared by sessions)", "fr": "Contexte (total, partagé entre sessions)"},
+                "default": "0"},
+        "parallel": {"label": {"en": "Parallel sessions", "fr": "Sessions parallèles"}, "default": "1"},
+        "ngl": {"label": {"en": "GPU layers (999 = all)", "fr": "Couches sur GPU (999 = toutes)"}, "default": "999"},
+        "flash_attn": {"label": "Flash attention", "default": "on",
+                       "values": [["on", {"en": "on", "fr": "activée"}], ["off", {"en": "off", "fr": "désactivée"}],
+                                  ["auto", "auto"]]}
+      }
+    }
+  },
+  "llama.cpp-vulkan": {
+    "label": "llama.cpp (Vulkan)",
+    "desc": {
+      "en": "llama.cpp built with Vulkan: runs GGUF models on AMD and Intel GPUs (APUs included), and on NVIDIA without the CUDA toolkit. A little slower than CUDA on NVIDIA.",
+      "fr": "llama.cpp compilé avec Vulkan : fait tourner les modèles GGUF sur les GPU AMD et Intel (APU compris), et sur NVIDIA sans le toolkit CUDA. Un peu plus lent que CUDA sur NVIDIA."
+    },
+    "url": "https://github.com/ggml-org/llama.cpp",
+    "dir": "~/llm/llama.cpp-vulkan",
+    "script": "llama.cpp-vulkan.sh",
+    "disk_gb": 3,
+    "minutes": 10,
+    "engine": {
+      "label": "llama.cpp (Vulkan)",
+      "kinds": ["llm"],
+      "file_ext": [".gguf"],
+      "command": ["~/llm/llama.cpp-vulkan/build/bin/llama-server", "-m", "{file}", "--host", "0.0.0.0", "--port", "{port}",
+                  "--alias", "{model_id}", "-ngl", "{ngl}", "-fa", "{flash_attn}", "-c", "{ctx}", "-np", "{parallel}"],
+      "health": "/health",
+      "endpoint": "/v1",
+      "procs": ["llama-server"],
+      "match_file": true,
+      "repo": "~/llm/llama.cpp-vulkan",
       "build": ["cmake", "--build", "build", "--target", "llama-server"],
       "binary": "build/bin/llama-server",
       "params": {
@@ -46,6 +82,7 @@
     "script": "vllm.sh",
     "disk_gb": 12,
     "minutes": 10,
+    "gpu": ["nvidia"],
     "engine": {
       "label": "vLLM",
       "kinds": ["llm"],
@@ -78,6 +115,7 @@
     "script": "vllm-omni.sh",
     "disk_gb": 12,
     "minutes": 15,
+    "gpu": ["nvidia"],
     "engine": {
       "label": "vLLM-Omni",
       "kinds": ["tts"],
@@ -102,6 +140,7 @@
     "script": "ninfer.sh",
     "disk_gb": 2,
     "minutes": 20,
+    "gpu": ["nvidia"],
     "min_cc": 12.0,
     "engine": {
       "label": "Ninfer",

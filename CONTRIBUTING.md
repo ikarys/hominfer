@@ -42,7 +42,8 @@ Helpers:
 ## Adding an engine to the catalog
 
 1. Add an entry to `catalog/catalog.json`: `label`, `desc` (`{"en", "fr"}`), `url`, `dir` (install
-   folder, under `~/llm`), `script`, `disk_gb`, `minutes`, optional `min_cc` (minimum GPU compute
+   folder, under `~/llm`), `script`, `disk_gb`, `minutes`, optional `gpu` (vendors the build targets,
+   e.g. `["nvidia"]`; omitted: any GPU or none), optional `min_cc` (minimum NVIDIA compute
    capability), and `engine`: the block written to `engines.json` (see
    [docs/configuration.md](docs/configuration.md#enginesjson)).
 2. Write `catalog/<engine>.sh`. Source `lib.sh`, check tools with `need`, use `cuda_toolkit` /
