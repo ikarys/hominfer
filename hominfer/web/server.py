@@ -1,13 +1,28 @@
-"""HTTP transport: JSON in / out, errors -> status codes, the page, same-origin POSTs only."""
+"""HTTP transport: JSON in / out, errors -> status codes, the page, known hosts and same-origin POSTs only."""
+import ipaddress
 import json
+import socket
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qsl, urlsplit
 
+from .. import config
 from ..errors import LaunchError
 from ..i18n import tr
 from . import page, routes, static
 
 MAX_BODY = 1 << 20
+
+
+def host_allowed(host_header):
+    """DNS rebinding guard: a foreign site resolving to this machine still sends its own name as Host."""
+    name = (host_header or "").rsplit(":", 1)[0].strip("[]").lower()
+    try:
+        ipaddress.ip_address(name)
+        return True
+    except ValueError:
+        pass
+    me = socket.gethostname().lower()
+    return name in {"localhost", me, f"{me}.local"} | config.ALLOWED_HOSTS
 
 
 def make_handler(app):
@@ -48,6 +63,8 @@ def make_handler(app):
                 self._send(500, {"error": f"{type(e).__name__}: {e}"})
 
         def do_GET(self):
+            if not host_allowed(self.headers.get("host")):
+                return self._send(403, {"error": tr("http.bad_host")})
             path = urlsplit(self.path).path
             if path.startswith("/api/"):
                 return self._dispatch("GET")
@@ -59,6 +76,8 @@ def make_handler(app):
             self._send(200, *found)
 
         def do_POST(self):
+            if not host_allowed(self.headers.get("host")):
+                return self._send(403, {"error": tr("http.bad_host")})
             # the page is served on the LAN: refuse POSTs from another site (origin != requested host)
             origin = self.headers.get("origin")
             if origin and origin != f"http://{self.headers.get('host')}":

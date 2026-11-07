@@ -234,6 +234,7 @@
   "http.too_big": "Request too large.",
   "http.not_found": "not found",
   "http.bad_origin": "origin refused",
+  "http.bad_host": "host refused (set HOMINFER_ALLOWED_HOSTS)",
 
   "run.died": "Stopped by itself (code {code}): see the logs.",
   "run.already": "Already started.",

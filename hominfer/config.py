@@ -7,6 +7,8 @@ HOME = Path.home()
 
 LISTEN_HOST = os.environ.get("HOMINFER_HOST", "0.0.0.0")
 LISTEN_PORT = int(os.environ.get("HOMINFER_PORT", "8090"))
+# extra host names the page may be reached by (comma-separated); IPs, localhost and this machine's name always pass
+ALLOWED_HOSTS = {h.strip().lower() for h in os.environ.get("HOMINFER_ALLOWED_HOSTS", "").split(",") if h.strip()}
 
 DEFAULT_MODELS_DIR = os.environ.get("HOMINFER_MODELS_DIR", "~/hominfer_models")  # changed in Settings
 LOG_DIR = ROOT / "logs"
