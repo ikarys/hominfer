@@ -14,6 +14,10 @@ export const decimal = (x, digits = 1) => dec(x.toFixed(digits));
 
 export const count = n => (n ?? 0).toLocaleString(t("locale"));
 
+// an engine metric (see engines.json "metrics") with its unit
+export const metric = (v, unit) => unit === "bytes" ? size(v) : unit === "pct" ? Math.round(v * 100) + " %"
+  : unit === "x" ? decimal(v, 2) + "×" : count(Math.round(v));
+
 export function dur(s) {
   if (s == null) return "–";
   if (s < 60) return s + " s";

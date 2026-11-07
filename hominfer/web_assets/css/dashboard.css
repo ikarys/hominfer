@@ -56,6 +56,9 @@
 .metric b { display: block; font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .metric span { font-size: 11px; color: var(--muted); }
 .metrics.off { opacity: .45; }
+.metrics.eng { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+.metrics.eng .metric span { display: block; overflow-wrap: anywhere; }
+.caption { margin-top: 6px; font-size: 11px; color: var(--faint); }
 
 .opts { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
 .opts label { font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
@@ -66,4 +69,5 @@
   .sys { grid-template-columns: 1fr 1fr; }
   .cards { grid-template-columns: 1fr; }
   .metrics { grid-template-columns: repeat(2, 1fr); }
+  .metrics.eng { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
 }

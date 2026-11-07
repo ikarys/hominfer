@@ -45,6 +45,7 @@
 
   "ui.card.uptime": "en route depuis",
   "ui.card.cores": "CPU · {n} cœur(s)",
+  "ui.card.engine_metrics": "métriques du moteur, compteurs depuis son démarrage",
   "ui.card.profile": "Profil",
   "ui.card.custom": "personnalisé",
   "ui.card.save_profile": "Enregistrer le profil…",
@@ -205,6 +206,7 @@
   "cfg.env": "env : valeurs en chaînes",
   "cfg.procs": "procs : noms des processus du moteur (argv[0] / argv[1])",
   "cfg.http_path": "{key} : chemin HTTP commençant par /",
+  "cfg.metrics": "metrics : {path : \"/...\", show : [1 à {max} éléments, chacun avec un label et soit value soit ratio (2 expressions comme nom{k=\"v\"}) ; unit : {units}]}",
   "cfg.params_keys": "params : clés en lettres / chiffres",
   "cfg.device_param": "device_param : doit être un des params",
   "cfg.placeholder": "{var} : ni un param ni {builtins}",

@@ -32,12 +32,22 @@ weights.
 | `device_param` | param holding `cpu` / `cuda` / `auto` (auto = GPU if enough free VRAM) |
 | `provides_repos` | Hugging Face repositories this engine downloads itself |
 | `uses` | where those weights land, relative to the models folder (e.g. `hf/models--org--name`) |
+| `metrics` | counters shown on the model card, read from the engine's Prometheus endpoint: `{"path": "/metrics", "show": [item, ...]}` (details below) |
 | `install_hint` | shown when the engine is missing |
 | `repo`, `build`, `binary` | git clone of the engine: enables the "Check for updates" / "Update" buttons (pull + build) |
 
 Placeholders in `command` and `env`: `{port}` `{file}` `{file_name}` `{file_dir}` `{models_dir}`
 `{model_id}`, and every param. An argument or an env variable that ends up empty is dropped, which is
 how optional params work.
+
+### Engine metrics
+
+`metrics.show` lists up to 16 items, each with a `label` (text or `{"en": ..., "fr": ...}`) and either
+`"value": EXPR` or `"ratio": [EXPR_A, EXPR_B]` (A / B; with `"one_minus": true`, 1 - A / B).
+`EXPR` is a metric name with an optional label selector, `name` or `name{k="v",k2="v2"}`: the samples
+having at least those labels are summed. An item without a match (or dividing by zero) is left out.
+`unit`: `count` (default), `bytes`, `pct` (a ratio shown as a percentage) or `x` (2 decimals and `×`).
+The launcher reads the endpoint for ready models only, at most every 5 seconds.
 
 ## `models.json`
 

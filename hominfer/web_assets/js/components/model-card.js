@@ -2,7 +2,7 @@
 import { api } from "../api.js";
 import { $, esc } from "../dom.js";
 import { emit } from "../events.js";
-import { decimal, dur, gb, initials } from "../format.js";
+import { decimal, dur, gb, initials, metric } from "../format.js";
 import { t } from "../i18n.js";
 import { seg, state } from "../state.js";
 import { openModelForm } from "./model-form.js";
@@ -27,6 +27,10 @@ export function cardHtml(id, m, hidden) {
         <div class="metric"><div class="m"><i data-k="ramM"></i></div><b data-k="ram">–</b><span>RAM</span></div>
         <div class="metric"><div data-k="cpuSpark"></div><b data-k="cpu">–</b><span data-k="cpuSub">CPU</span></div>
         <div class="metric"><b data-k="uptime">–</b><span>${esc(t("ui.card.uptime"))}</span></div>
+      </div>
+      <div data-k="engine" hidden>
+        <div class="metrics eng" data-k="engineTiles"></div>
+        <div class="caption">${esc(t("ui.card.engine_metrics"))}</div>
       </div>
       <div class="opts">${optionsHtml(m)}</div>
       <div class="endpoint" data-k="endpoint"></div>
@@ -177,6 +181,7 @@ export function updateCard(id, s, st) {
   $("[data-k=state]", card).textContent = t("ui.state." + s.state)
     + (s.state === "ready" && !s.managed ? t("ui.state.external") : "");
   updateMetrics(id, card, s, st, running);
+  updateEngineMetrics(card, s.metrics);
   const lan = st.lan_ip ? `  ·  LAN <code>http://${st.lan_ip}:${m.port}${m.endpoint}</code>` : "";
   $("[data-k=endpoint]", card).innerHTML = s.state === "ready"
     ? `Local <code>http://127.0.0.1:${m.port}${m.endpoint}</code>${lan}` : "";
@@ -206,6 +211,13 @@ function updateMetrics(id, card, s, st, running) {
   spark($("[data-k=cpuSpark]", card), ch, Math.max(25, ...ch));
   $("[data-k=cpuSub]", card).textContent = running ? t("ui.card.cores", { n: decimal(s.cpu_pct / 100) }) : "CPU";
   $("[data-k=uptime]", card).textContent = running ? dur(s.uptime_s) : "–";
+}
+
+// the engine's own counters (Prometheus), when it exposes some
+function updateEngineMetrics(card, items) {
+  $("[data-k=engine]", card).hidden = !items?.length;
+  $("[data-k=engineTiles]", card).innerHTML = (items || []).map(i =>
+    `<div class="metric"><b>${esc(metric(i.value, i.unit))}</b><span>${esc(i.label)}</span></div>`).join("");
 }
 
 // engine update running / done / failed, with its log

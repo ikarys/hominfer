@@ -16,6 +16,15 @@ def http_ok(port, path, timeout=1.5):
         return False
 
 
+def http_text(port, path, timeout=1.0, max_bytes=2 * 2**20):
+    """Body of a GET on a local port (text, cut at max_bytes), or None on any failure."""
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}{path}", timeout=timeout) as r:
+            return r.read(max_bytes).decode("utf-8", "replace") if r.status == 200 else None
+    except Exception:
+        return None
+
+
 def port_open(port):
     with socket.socket() as s:
         s.settimeout(0.5)

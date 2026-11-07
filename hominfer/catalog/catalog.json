@@ -158,6 +158,25 @@
       "repo": "~/llm/ninfer",
       "build": ["cmake", "--build", "build/release", "--target", "ninfer-serve"],
       "binary": "build/release/apps/ninfer-serve",
+      "metrics": {
+        "path": "/metrics",
+        "show": [
+          {"label": {"en": "Running", "fr": "En cours"}, "value": "ninfer_requests_running"},
+          {"label": {"en": "Paused", "fr": "En pause"}, "value": "ninfer_requests_paused"},
+          {"label": {"en": "Waiting", "fr": "En attente"}, "value": "ninfer_requests_waiting"},
+          {"label": {"en": "Prefix cache reuse", "fr": "Réutilisation du cache de préfixe"},
+           "ratio": ["ninfer_prefill_tokens_total", "ninfer_prompt_tokens_total"], "one_minus": true, "unit": "pct"},
+          {"label": {"en": "Preemptions", "fr": "Préemptions"}, "value": "ninfer_preemptions_total"},
+          {"label": {"en": "Restores from host RAM", "fr": "Restaurations depuis la RAM"},
+           "value": "ninfer_snapshot_restores_total"},
+          {"label": {"en": "KV on device", "fr": "KV sur le GPU"},
+           "value": "ninfer_context_pool_bytes{domain=\"device\",kind=\"live\"}", "unit": "bytes"},
+          {"label": {"en": "KV in host RAM", "fr": "KV en RAM"},
+           "value": "ninfer_context_pool_bytes{domain=\"host\",kind=\"live\"}", "unit": "bytes"},
+          {"label": {"en": "Tokens per round", "fr": "Tokens par tour"},
+           "ratio": ["ninfer_generation_tokens_total", "ninfer_spec_decode_rounds_total"], "unit": "x"}
+        ]
+      },
       "params": {
         "ctx": {"label": {"en": "Max context (tokens)", "fr": "Contexte max (tokens)"}, "default": "131072"},
         "concurrency": {"label": {"en": "Parallel sessions", "fr": "Sessions parallèles"}, "default": "4"},

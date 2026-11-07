@@ -6,6 +6,7 @@ from .infra import gpu
 from .infra.power import KeepAwake
 from .services.catalog import Catalog
 from .services.downloads import Downloads
+from .services.engine_metrics import EngineMetrics
 from .services.hub import HubAdvisor
 from .services.library import Library
 from .services.model_editor import ModelEditor
@@ -36,7 +37,7 @@ def build():
     updates = Updates(registry, config.LOG_DIR)
     supervisor = Supervisor(registry, updates, gpu=gpu.query, keep_awake=KeepAwake(), log_dir=config.LOG_DIR,
                             models_dir=models_dir, default_baseline_mib=config.DEFAULT_BASELINE_MIB,
-                            gpu_mem=gpu.process_mib)
+                            gpu_mem=gpu.process_mib, engine_metrics=EngineMetrics(registry))
     downloads = Downloads(models_dir, config.LOG_DIR)
     library = Library(models_dir, registry, downloads)
     catalog = Catalog(config.CATALOG_DIR, registry, config.LOG_DIR, models_dir)
