@@ -22,7 +22,7 @@ async function reloadModels(show) {
   buildCards(show);
   renderModelsTable();
   await poll();
-  loadLibrary();  // shown in /models, and the model form offers its files everywhere
+  if (VIEW === "manage") loadLibrary();  // elsewhere the model form fetches it when opened
 }
 
 on("reload", reloadModels);
@@ -38,5 +38,5 @@ document.body.classList.add("page-" + VIEW);
 document.querySelector(`.nav [data-view="${VIEW}"]`)?.classList.add("on");
 
 await reloadModels();
-if (VIEW === "home") setInterval(poll, POLL_MS);
+if (VIEW === "home") setInterval(() => document.hidden || poll(), POLL_MS);
 if (VIEW === "settings") loadEngines();

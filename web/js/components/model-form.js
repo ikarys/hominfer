@@ -27,6 +27,12 @@ function paramFields(engine, params) {
   $("#fileField").hidden = !state.engines[engine].needs_file;
 }
 
+// the models folder's files, offered in the file field (the library is only loaded on /models)
+function fileList() {
+  $("#fileList").innerHTML = (state.lib?.items || []).flatMap(it => it.files.filter(x => x.path))
+    .map(x => `<option value="${esc(state.lib.dir + "/" + x.path)}">`).join("");
+}
+
 export function openModelForm(id, preset = {}) {
   editing = id;
   const c = id ? state.models[id].config
@@ -38,8 +44,8 @@ export function openModelForm(id, preset = {}) {
   $("#vramInfo").textContent = id
     ? size(state.models[id].vram_mib * 2 ** 20) + (c.vram_mib ? t("ui.form.vram_fixed") : "")
     : t("ui.form.vram_later");
-  $("#fileList").innerHTML = (state.lib?.items || []).flatMap(it => it.files.filter(x => x.path))
-    .map(x => `<option value="${esc(state.lib.dir + "/" + x.path)}">`).join("");
+  fileList();
+  if (!state.lib) api("/api/library").then(lib => { state.lib ??= lib; fileList(); }).catch(() => {});
   $("#taskList").innerHTML = Object.keys(state.taskKind).map(k => `<option value="${esc(k)}">`).join("");
   for (const k of FIELDS) f.elements[k].value = c[k] ?? "";
   f.elements.id.value = id || "";
