@@ -3,14 +3,14 @@
 ![Python 3.12](https://img.shields.io/badge/python-3.12-blue)
 ![License MIT](https://img.shields.io/badge/license-MIT-green)
 ![Platform Linux / WSL2](https://img.shields.io/badge/platform-Linux%20%7C%20WSL2-lightgrey)
-![GPU NVIDIA](https://img.shields.io/badge/gpu-NVIDIA-orange)
+![GPU NVIDIA | AMD](https://img.shields.io/badge/gpu-NVIDIA%20%7C%20AMD-orange)
 
 Run local AI models like home services. Paste a Hugging Face repo and it tells you which variants fit
 your GPU, installs the engine you're missing, and gives every model a card to start, stop and profile —
 with live VRAM, RAM, CPU and GPU load.
 
 Engine-agnostic by design: llama.cpp, vLLM, Ninfer and friends are configuration, not code.
-Linux / WSL2, NVIDIA.
+Linux / WSL2, NVIDIA or AMD (APUs included).
 
 ![Dashboard](docs/images/dashboard.png)
 
@@ -18,12 +18,12 @@ Linux / WSL2, NVIDIA.
 
 - **Start / stop models** with profiles (context size, parallel sessions, vision, CPU or GPU…), from any
   browser on your LAN
-- **Live usage**: VRAM per model (inferred, since `nvidia-smi` under WSL doesn't report per-process
-  memory), RAM, CPU, GPU load and temperature
+- **Live usage**: VRAM per model (measured on AMD, inferred on NVIDIA since `nvidia-smi` under WSL
+  doesn't report per-process memory), RAM, CPU, GPU load and temperature
 - **Hugging Face browser**: paste a repository and get a "does it run here?" verdict for every variant,
   based on your GPU, your installed engines and free disk, then download what fits
 - **Engine catalog**: install llama.cpp, vLLM and others from the page when a model needs one, with no
-  sudo (the CUDA toolkit comes from NVIDIA's pip wheels)
+  sudo (the CUDA toolkit comes from NVIDIA's pip wheels; AMD and Intel get a Vulkan build of llama.cpp)
 - **Library**: every model file of your models folder, which model uses it, and cleanup
 - **Settings**: UI language (English, French), theme (auto, light, dark, cyber, pixel, neo), models folder
 - Port conflict detection; the models the launcher started stop with it
@@ -36,7 +36,8 @@ Linux / WSL2, NVIDIA.
 ## Requirements
 
 - Linux or WSL2 (Ubuntu tested), with systemd for the optional boot service
-- An NVIDIA GPU with its driver (`nvidia-smi`). The page still works without one, but most engines need it
+- An NVIDIA GPU with its driver (`nvidia-smi`), or an AMD GPU on the `amdgpu` driver. The page still works
+  without one, but most engines need it. On AMD only llama.cpp (Vulkan) is offered for now
 - [uv](https://github.com/astral-sh/uv) (Python and the venvs) and [just](https://github.com/casey/just)
   (the commands below)
 - To build engines from the catalog: `sudo apt install git cmake ninja-build build-essential`
