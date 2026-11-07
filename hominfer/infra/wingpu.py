@@ -10,6 +10,8 @@ from ..domain.wingpu import aggregate
 
 INTERVAL_S = 30
 TIMEOUT_S = 15
+# services (systemd) don't get the Windows PATH that WSL adds to login shells
+DEFAULT_PS = "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
 SCRIPT = r"""
 $s = (Get-Counter '\GPU Process Memory(*)\Dedicated Usage').CounterSamples | ? { $_.CookedValue -gt 1MB } |
   % { @{n=$_.InstanceName; v=[int64]$_.CookedValue} }
@@ -20,16 +22,18 @@ Get-Process -Id $ids -ErrorAction SilentlyContinue | % { $names["$($_.Id)"] = $_
 """
 
 
-def available():
+def powershell():
+    """Path of powershell.exe under WSL, or None."""
     try:
-        wsl = "microsoft" in Path("/proc/version").read_text().lower()
+        if "microsoft" not in Path("/proc/version").read_text().lower():
+            return None
     except OSError:
-        return False
-    return wsl and shutil.which("powershell.exe") is not None
+        return None
+    return shutil.which("powershell.exe") or (DEFAULT_PS if Path(DEFAULT_PS).is_file() else None)
 
 
-def sample():
-    out = subprocess.run(["powershell.exe", "-NoProfile", "-Command", SCRIPT], capture_output=True, text=True,
+def sample(exe="powershell.exe"):
+    out = subprocess.run([exe, "-NoProfile", "-Command", SCRIPT], capture_output=True, text=True,
                          timeout=TIMEOUT_S, stdin=subprocess.DEVNULL).stdout
     return aggregate(json.loads(out))
 
@@ -41,13 +45,13 @@ class WindowsGpu:
         self.sampler, self.last = sampler, None
 
     def start(self):
-        if available():
-            threading.Thread(target=self._loop, daemon=True).start()
+        if exe := powershell():
+            threading.Thread(target=self._loop, args=(exe,), daemon=True).start()
 
-    def _loop(self):
+    def _loop(self, exe):
         while True:
             try:
-                self.last = self.sampler()
+                self.last = self.sampler(exe)
             except Exception:  # keep the last value
                 pass
             time.sleep(INTERVAL_S)
