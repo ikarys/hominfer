@@ -23,8 +23,8 @@ button); its log shows in the page. Engines go to `~/llm/<engine>` and are added
 
 No sudo is needed: engines are built against a CUDA toolkit made of NVIDIA's pip wheels. The system tools
 for builds are the only prerequisite: `sudo apt install git cmake ninja-build build-essential`. The Vulkan
-build of llama.cpp (AMD, Intel) also needs the Vulkan headers and `glslc`:
-`sudo apt install libvulkan-dev glslc` (Arch: `vulkan-headers shaderc`).
+build of llama.cpp (AMD, Intel) also needs the Vulkan and SPIR-V headers and `glslc`:
+`sudo apt install libvulkan-dev spirv-headers glslc` (Arch: `vulkan-headers spirv-headers shaderc`).
 
 **Update** on an installed engine runs its script again (pull and rebuild).
 

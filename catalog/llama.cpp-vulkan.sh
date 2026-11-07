@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # llama.cpp (ggml-org): llama-server built with Vulkan (AMD, Intel, NVIDIA), in $INSTALL_DIR.
-# Needs the Vulkan headers and loader, and glslc to compile the shaders.
+# Needs the Vulkan and SPIR-V headers, the Vulkan loader, and glslc to compile the shaders.
 source "$(dirname "$0")/lib.sh"
 need git cmake ninja g++ glslc
 git_checkout https://github.com/ggml-org/llama.cpp "$INSTALL_DIR"
