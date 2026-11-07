@@ -48,12 +48,12 @@ function showModel(kind, id) {
   for (const [mid, m] of Object.entries(state.models)) if (m.kind === kind) $("#card-" + mid).hidden = mid !== id;
 }
 
-const shortGpuName = name => name.replace("NVIDIA GeForce ", "");
+const shortGpuName = name => name.replace("NVIDIA GeForce ", "").replace(" Graphics", "");
 
 function renderSystem(st) {
   const g = st.gpu;
   if (g) {
-    $("#gpuName").textContent = "· " + shortGpuName(g.name);
+    $("#gpuName").textContent = "· " + shortGpuName(g.name) + (g.unified ? " · " + t("ui.sys.unified") : "");
     $("#vramBig").innerHTML = `${gb(g.used)} <small>/ ${gb(g.total)} · ${esc(t("ui.sys.free", { size: gb(g.total - g.used) }))}</small>`;
     const segs = vramSegments(st);
     $("#vramBar").innerHTML = segs.map(([, v, c]) => `<span style="width:${v / g.total * 100}%;background:${c}"></span>`).join("");

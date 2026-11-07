@@ -13,7 +13,7 @@ Layers whose dependencies point inwards: `web` → `services` → `domain`, with
 | `web/` | HTTP: route table (URL → service call), presenters (JSON for the page), page rendering, static files, server (transport, errors) |
 | `services/` | use cases: `supervisor` (start / stop / measure), `registry` (engines.json + models.json), `model_editor`, `library`, `downloads`, `catalog` (engine installs), `updates`, `hub` (Hugging Face verdicts), `settings`, `folders` (folder picker), `jobs` (background jobs) |
 | `domain/` | pure rules: engine command building, model validation, compatibility verdicts, card state and VRAM |
-| `infra/` | system access: GPU (`nvidia-smi`), processes, network, files, Hugging Face, git, sleep inhibition |
+| `infra/` | system access: GPU (`nvidia-smi`, amdgpu sysfs), processes, network, files, Hugging Face, git, sleep inhibition |
 
 - `app.py` wires the services together (composition root); `__main__.py` starts the server.
 - `config.py` holds paths and environment settings; `i18n.py` the translations; `errors.py` the one

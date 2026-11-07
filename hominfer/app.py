@@ -35,7 +35,8 @@ def build():
     registry = Registry(config.ENGINES_FILE, config.MODELS_FILE, listen_port=config.LISTEN_PORT)
     updates = Updates(registry, config.LOG_DIR)
     supervisor = Supervisor(registry, updates, gpu=gpu.query, keep_awake=KeepAwake(), log_dir=config.LOG_DIR,
-                            models_dir=models_dir, default_baseline_mib=config.DEFAULT_BASELINE_MIB)
+                            models_dir=models_dir, default_baseline_mib=config.DEFAULT_BASELINE_MIB,
+                            gpu_mem=gpu.process_mib)
     downloads = Downloads(models_dir, config.LOG_DIR)
     library = Library(models_dir, registry, downloads)
     catalog = Catalog(config.CATALOG_DIR, registry, config.LOG_DIR, models_dir)

@@ -21,10 +21,13 @@ from ..infra.files import tail
 
 
 class Supervisor:
-    def __init__(self, registry, updates, *, gpu, keep_awake, log_dir, models_dir, default_baseline_mib):
+    def __init__(self, registry, updates, *, gpu, keep_awake, log_dir, models_dir, default_baseline_mib,
+                 gpu_mem=None):
         """gpu: () -> GPU state or None; keep_awake: .set(bool) holds off the host's sleep;
-        models_dir: () -> the models folder (a setting)."""
+        models_dir: () -> the models folder (a setting);
+        gpu_mem: (pids, pdev, unified) -> {pid: MiB}, the per-process GPU memory when the driver gives it (AMD)."""
         self.registry, self.updates, self.gpu, self.keep_awake = registry, updates, gpu, keep_awake
+        self.gpu_mem = gpu_mem
         self.log_dir, self.models_dir, self.default_baseline_mib = log_dir, models_dir, default_baseline_mib
         self.lock = threading.RLock()
         self.poll_lock = threading.Lock()  # the loop and the HTTP actions both poll
@@ -82,15 +85,21 @@ class Supervisor:
         gpu, procs = self.gpu(), self.find()
         healthy = self._probe(procs)
         running = any(procs.values())
-        if gpu and baseline_ok(gpu["pids"], running, gpu["util"]):
-            self.baseline = gpu["used"]
-        # A model on the GPU keeps its VRAM while the process lives, even when the GPU is idle
-        # (util ~ 0): attribute the GPU to VRAM allocated beyond the idle baseline, not to the
-        # instantaneous activity (which flickers with every request).
-        allocated = bool(gpu) and (gpu["used"] - self.baseline_mib()) > 256
-        on_gpu = on_gpu_for(procs, gpu["pids"], allocated) if gpu else {mid: False for mid in procs}
+        mem = self._gpu_mem(gpu, procs)
+        if mem is not None:  # measured per process: everything else is the baseline
+            self.baseline = max(0, gpu["used"] - sum(mem.values()))
+            on_gpu = {mid: v > 64 for mid, v in mem.items()}
+        else:
+            if gpu and baseline_ok(gpu["pids"], running, gpu["util"]):
+                self.baseline = gpu["used"]
+            # A model on the GPU keeps its VRAM while the process lives, even when the GPU is idle
+            # (util ~ 0): attribute the GPU to VRAM allocated beyond the idle baseline, not to the
+            # instantaneous activity (which flickers with every request).
+            allocated = bool(gpu) and (gpu["used"] - self.baseline_mib()) > 256
+            on_gpu = on_gpu_for(procs, gpu["pids"], allocated) if gpu else {mid: False for mid in procs}
         with self.lock:
-            models = {mid: self._model_view(mid, m, procs.get(mid, []), gpu, on_gpu, healthy.get(mid, False))
+            models = {mid: self._model_view(mid, m, procs.get(mid, []), gpu, on_gpu, healthy.get(mid, False),
+                                            mem and mem.get(mid))
                       for mid, m in self.registry.models.items()}
             alive = {p.pid for ps in procs.values() for p in ps}
             self.pcache = {pid: p for pid, p in self.pcache.items() if pid in alive}
@@ -101,7 +110,7 @@ class Supervisor:
         self.last_gpu = gpu
         self.snapshot = {
             "ready": True, "time": time.time(), "lan_ip": self.ip,
-            "gpu": gpu and {k: v for k, v in gpu.items() if k != "pids"} | {
+            "gpu": gpu and {k: v for k, v in gpu.items() if k not in ("pids", "pdev")} | {
                 "baseline": self.baseline_mib(), "baseline_measured": self.baseline is not None},
             "ram": ram,
             "cpu": {"pct": self._cpu("machine", psutil.cpu_percent), "count": psutil.cpu_count() or 1},
@@ -109,14 +118,23 @@ class Supervisor:
         }
         self.keep_awake.set(any(v["pids"] for v in models.values()))
 
-    def _model_view(self, mid, m, ps, gpu, on_gpu, healthy):
+    def _gpu_mem(self, gpu, procs):
+        """{model id: GPU memory in MiB} when the driver reports it per process, else None."""
+        if not (gpu and self.gpu_mem and gpu.get("pdev")):
+            return None
+        by_pid = self.gpu_mem([p.pid for ps in procs.values() for p in ps], gpu["pdev"], gpu["unified"])
+        return {mid: sum(by_pid.get(p.pid, 0) for p in ps) for mid, ps in procs.items()}
+
+    def _model_view(self, mid, m, ps, gpu, on_gpu, healthy, mem_mib=None):
         run = self._check_exit(mid, ps)
         state = model_state(stopping=mid in self.stopping, running=bool(ps), failed=mid in self.errors,
                             healthy=bool(ps) and healthy)
         if state == "ready" and run and run["vram_load"] is None and gpu and run["vram_before"] is not None:
             run["vram_load"] = max(0, gpu["used"] - run["vram_before"])
         vram, how = None, None
-        if ps and gpu:
+        if ps and mem_mib is not None:
+            vram, how = (mem_mib, "live") if on_gpu.get(mid) else (0, "cpu")
+        elif ps and gpu:
             vram, how = model_vram(mid, on_gpu, gpu["used"], self.baseline_mib(), self.baseline is not None,
                                    run and run["vram_load"], pids_known=bool(gpu["pids"]))
         rss, cpu, started = self._usage(ps)

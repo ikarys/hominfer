@@ -27,7 +27,8 @@
   "ui.home.empty_text": "Add a model from Hugging Face or from a file of the models folder. If it needs an inference engine you don't have, the launcher suggests one to install from Settings.",
   "ui.home.empty_models": "Add a model",
   "ui.home.empty_engines": "Inference engines",
-  "ui.sys.no_gpu": "nvidia-smi unavailable",
+  "ui.sys.unified": "shared with RAM",
+  "ui.sys.no_gpu": "no GPU detected (NVIDIA or AMD)",
   "ui.sys.cores": "{n} logical cores",
 
   "ui.state.stopped": "Stopped",

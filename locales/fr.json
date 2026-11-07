@@ -27,7 +27,8 @@
   "ui.home.empty_text": "Ajoute un modèle depuis Hugging Face ou depuis un fichier du dossier des modèles. S'il lui faut un moteur d'inférence absent, le launcher en propose un à installer depuis les Réglages.",
   "ui.home.empty_models": "Ajouter un modèle",
   "ui.home.empty_engines": "Moteurs d'inférence",
-  "ui.sys.no_gpu": "nvidia-smi indisponible",
+  "ui.sys.unified": "partagée avec la RAM",
+  "ui.sys.no_gpu": "aucun GPU détecté (NVIDIA ou AMD)",
   "ui.sys.cores": "{n} cœurs logiques",
 
   "ui.state.stopped": "Arrêté",
