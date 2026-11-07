@@ -102,6 +102,7 @@ ROUTES = [
     Route("POST", re.compile(r"/api/hf/info"), lambda app, m, b: app.hub.check(str(b.get("repo", "")).strip())),
     Route("POST", re.compile(r"/api/hf/download"), lambda app, m, b: _download(app, b)),
     Route("POST", re.compile(r"/api/hf/cancel/(\d+)"), _do(lambda app, m, b: app.downloads.cancel(int(m[1])))),
+    Route("POST", re.compile(r"/api/hf/dismiss/(\d+)"), _do(lambda app, m, b: app.downloads.dismiss(int(m[1])))),
     Route("POST", re.compile(r"/api/engines/install/([\w.-]+)"), lambda app, m, b: _install(app, m[1])),
     Route("POST", re.compile(r"/api/library/delete"), _do(lambda app, m, b: app.library.delete(str(b.get("path", ""))))),
     Route("POST", re.compile(r"/api/reload"), _do(lambda app, m, b: app.registry.reload_models())),

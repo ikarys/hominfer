@@ -51,6 +51,12 @@ class Jobs:
                 job.state = "error"
                 job.msg = str(e) if isinstance(e, LaunchError) else f"{type(e).__name__}: {e}"
 
+    def forget(self, key):
+        """Drop a finished job from the list (a running one stays)."""
+        with self.lock:
+            if key in self.jobs and not self.running(key):
+                del self.jobs[key]
+
     def cancel(self, key):
         job = self.jobs.get(key)
         if job and job.state == "running":

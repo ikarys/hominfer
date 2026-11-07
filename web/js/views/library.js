@@ -33,7 +33,8 @@ function downloadHtml(d) {
     <div class="bar"><span style="width:${Math.min(100, d.done / d.total * 100)}%;background:var(--accent)"></span></div>
     <div class="meta">${size(d.done)} / ${size(d.total)} · <button class="link" data-cancel="${d.id}">${esc(t("ui.dl.cancel"))}</button></div>`
     : `<div class="meta" style="color:${d.state === "done" ? "var(--ok)" : "var(--err)"}">${
-        esc({ done: t("ui.dl.done"), cancelled: t("ui.dl.cancelled") }[d.state] || d.msg)}</div>`;
+        esc({ done: t("ui.dl.done"), cancelled: t("ui.dl.cancelled") }[d.state] || d.msg)} · <button class="link" data-dismiss="${d.id}">${
+        esc(t("ui.dl.dismiss"))}</button></div>`;
   return `<div class="dl-row"><div><b>${esc(d.repo)}</b> <span class="meta">${esc(d.files.join(", "))}</span></div>${status}</div>`;
 }
 
@@ -105,6 +106,7 @@ async function onClick(b) {
   if (d.use) return void addAsModel(d.use, d.task);
   if (d.quick) await api("/api/hf/download", { repo: d.quick, files: JSON.parse(d.files) });
   else if (d.cancel) await api(`/api/hf/cancel/${d.cancel}`, {});
+  else if (d.dismiss) await api(`/api/hf/dismiss/${d.dismiss}`, {});
   else if (d.del) {
     if (!confirm(t("ui.lib.delete_confirm", { name: d.label }))) return false;
     await api("/api/library/delete", { path: d.del });

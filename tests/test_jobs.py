@@ -47,3 +47,13 @@ def test_process_job_and_cancel(tmp_path):
         threading.Event().wait(0.01)
     jobs.cancel("s")
     assert wait(job).state == "cancelled"
+
+
+def test_forget_drops_finished_jobs_only(tmp_path):
+    jobs, gate = Jobs(), threading.Event()
+    wait(jobs.start("a", tmp_path / "a.log", lambda job: "", busy_msg="busy"))
+    jobs.start("b", tmp_path / "b.log", lambda job: gate.wait(), busy_msg="busy")
+    jobs.forget("a")
+    jobs.forget("b")
+    assert [j.key for j in jobs.all()] == ["b"]
+    gate.set()

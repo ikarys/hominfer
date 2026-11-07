@@ -170,6 +170,7 @@
   "ui.src.local": "local",
   "ui.dl.cancel": "Annuler",
   "ui.dl.done": "Terminé",
+  "ui.dl.dismiss": "Retirer de la liste",
   "ui.dl.cancelled": "Annulé (le téléchargement reprendra là où il en était si tu le relances)",
   "ui.dl.nothing": "Déjà installé : rien à télécharger.",
   "ui.dl.confirm_unusable": "Cette sélection ne pourra pas tourner sur ta machine (voir l'explication). Télécharger quand même ?",

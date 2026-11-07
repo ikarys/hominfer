@@ -54,8 +54,8 @@ class Downloads:
                 raise LaunchError(tr("dl.failed", code=code, log=tail(job.log_path, 3)))
             self._write_meta(target, info, files)
             return None
-        n = next(self.ids)
-        self.jobs.start(n, self.log_dir / f"download-{n}.log", work, busy_msg=tr("dl.running"),
+        n = next(self.ids)  # restarts at 1 with the launcher: the log name carries the date too
+        self.jobs.start(n, self.log_dir / f"download-{time.strftime('%Y%m%d-%H%M%S')}-{n}.log", work, busy_msg=tr("dl.running"),
                         repo=repo, files=files, total=total, target=target, base=size_of(target))
 
     @staticmethod
@@ -70,6 +70,9 @@ class Downloads:
 
     def cancel(self, n):
         self.jobs.cancel(n)
+
+    def dismiss(self, n):
+        self.jobs.forget(n)
 
     def status(self):
         return [{"id": j.key, "repo": j.data["repo"], "files": j.data["files"], "total": j.data["total"],
