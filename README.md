@@ -1,6 +1,6 @@
 # Hominfer
 
-![Python 3.12](https://img.shields.io/badge/python-3.12-blue)
+![Python 3.12](https://img.shields.io/badge/python-3.11+-blue)
 ![License MIT](https://img.shields.io/badge/license-MIT-green)
 ![Platform Linux / WSL2](https://img.shields.io/badge/platform-Linux%20%7C%20WSL2-lightgrey)
 ![GPU NVIDIA | AMD](https://img.shields.io/badge/gpu-NVIDIA%20%7C%20AMD-orange)
@@ -38,30 +38,34 @@ Linux / WSL2, NVIDIA or AMD (APUs included).
 - Linux or WSL2 (Ubuntu tested), with systemd for the optional boot service
 - An NVIDIA GPU with its driver (`nvidia-smi`), or an AMD GPU on the `amdgpu` driver. The page still works
   without one, but most engines need it. On AMD only llama.cpp (Vulkan) is offered for now
-- [uv](https://github.com/astral-sh/uv) (Python and the venvs) and [just](https://github.com/casey/just)
-  (the commands below)
+- [uv](https://github.com/astral-sh/uv) (installed by the script below if missing)
 - To build engines from the catalog: `sudo apt install git cmake ninja-build build-essential`
 
 ## Getting started
 
 ```sh
-git clone https://github.com/ikarys/hominfer.git
-cd hominfer
-just run              # http://localhost:8090, also reachable from the LAN
+curl -LsSf https://raw.githubusercontent.com/ikarys/hominfer/main/install.sh | bash
+hominfer              # http://127.0.0.1:8090
 ```
 
-`run.sh` creates the launcher's venv on the first run and keeps it in sync with `requirements.txt`.
+The page listens on this machine only by default. To open it from the LAN and start it at boot
+(systemd, under WSL `[boot] systemd=true` in `/etc/wsl.conf`):
+
+```sh
+curl -LsSf https://raw.githubusercontent.com/ikarys/hominfer/main/install.sh | bash -s -- --service --lan
+```
+
+The page has no login: only expose it on a network you trust. Running the script again upgrades.
+Configuration goes to `~/.config/hominfer`, logs to `~/.local/state/hominfer/logs`.
+
 On first start there is no model and no engine yet:
 
 1. **Settings → Inference engines**: install an engine (llama.cpp is the most versatile)
 2. **Models → Download from Hugging Face**: paste a repository, pick a variant that fits, download it
 3. **Library → Add as a model**, then start it from the **Dashboard**
 
-To start the launcher when the machine (or WSL) boots:
-
-```sh
-just install-service  # systemd service; then: just logs-service, just restart
-```
+From a git checkout instead: `just run` (needs [just](https://github.com/casey/just)), and
+`just install-service` for the systemd service (reachable from the LAN).
 
 ## Documentation
 

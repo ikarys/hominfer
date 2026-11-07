@@ -6,3 +6,6 @@ models.json
 engines.json
 settings.json
 .pytest_cache/
+build/
+*.egg-info/
+dist/

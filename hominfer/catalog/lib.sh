@@ -7,7 +7,11 @@ set -euo pipefail
 export PATH="$HOME/.local/bin:$PATH"
 
 CUDA_VERSION="${CUDA_VERSION:-13.2}"
-CUDA_VENV="${CUDA_VENV:-$HOME/llm/cuda-$CUDA_VERSION/.venv}"
+# existing toolkit in ~/llm (older installs) is reused, otherwise it goes under ~/.local/share/hominfer
+if [ -z "${CUDA_VENV:-}" ]; then
+  CUDA_VENV="$HOME/llm/cuda-$CUDA_VERSION/.venv"
+  [ -d "$CUDA_VENV" ] || CUDA_VENV="${XDG_DATA_HOME:-$HOME/.local/share}/hominfer/cuda-$CUDA_VERSION/.venv"
+fi
 
 step() { echo; echo "==> $*"; }
 

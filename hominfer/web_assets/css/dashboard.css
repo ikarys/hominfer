@@ -30,7 +30,9 @@
 .kind-head { display: flex; align-items: center; gap: 10px; min-height: 32px; }
 .kind-head h3 { margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase;
   letter-spacing: 0.06em; color: var(--muted); }
-.kind-head select { margin-left: auto; }
+.kind-head .fav { margin-left: auto; background: none; border: 0; padding: 0 4px; font-size: 18px; line-height: 1; color: var(--faint);
+  cursor: pointer; }
+.kind-head .fav[aria-pressed=true] { color: var(--warn); }
 .card-head { display: flex; align-items: flex-start; gap: 10px; }
 .card-head h2 { margin: 0; font-size: 18px; }
 .engine { font-size: 12px; color: var(--muted); font-family: var(--mono); }

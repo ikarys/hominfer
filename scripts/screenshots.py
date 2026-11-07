@@ -77,7 +77,7 @@ def demo_setup(tmp):
     models = home / "hominfer_models"
     cfg.mkdir(parents=True)
     models.mkdir(parents=True)
-    catalog = json.loads((ROOT / "catalog" / "catalog.json").read_text())
+    catalog = json.loads((ROOT / "hominfer" / "catalog" / "catalog.json").read_text())
     (cfg / "engines.json").write_text(json.dumps(
         {k: catalog[k]["engine"] for k in ("vllm", "vllm-omni", "ninfer", "laya")}, indent=2) + "\n")
     (cfg / "models.json").write_text("{}\n")

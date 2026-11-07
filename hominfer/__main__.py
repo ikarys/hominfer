@@ -1,4 +1,4 @@
-"""Entry point: python -m hominfer (see run.sh)."""
+"""Entry point: the `hominfer` command or python -m hominfer."""
 import os
 import signal
 import threading
@@ -9,6 +9,9 @@ from .web.server import serve
 
 
 def main():
+    config.migrate_legacy_config()
+    config.CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    config.LOG_DIR.mkdir(parents=True, exist_ok=True)
     app = build()
     server = serve(app, config.LISTEN_HOST, config.LISTEN_PORT)
 

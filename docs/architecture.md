@@ -21,7 +21,7 @@ Layers whose dependencies point inwards: `web` → `services` → `domain`, with
 - Engines run as child processes. They get `PR_SET_PDEATHSIG`, so they stop with the launcher even when
   it is killed.
 
-## Page: `web/`
+## Page: `hominfer/web_assets/`
 
 | Path | Role |
 |---|---|
@@ -34,16 +34,16 @@ Layers whose dependencies point inwards: `web` → `services` → `domain`, with
 
 ## Translations
 
-Every text shown to the user comes from `locales/<lang>.json`, with the same keys for the page and the
+Every text shown to the user comes from `hominfer/locales/<lang>.json`, with the same keys for the page and the
 server: `tr()` in Python, `t()` in JavaScript, `{{t:key}}` in `index.html`. The server renders the page in
 the UI language and injects the strings the scripts need.
 
 ## Engine catalog
 
-`catalog/catalog.json` lists installable engines: description, disk and time estimates, GPU vendors it
+`hominfer/catalog/catalog.json` lists installable engines: description, disk and time estimates, GPU vendors it
 builds for (`gpu`), minimum NVIDIA generation (`min_cc`), install folder, and the block added to `engines.json`. Each one has an idempotent
 script, `catalog/<engine>.sh`: running it again updates or reconfigures. The scripts share
-`catalog/lib.sh` (CUDA toolkit from pip wheels, GPU architecture, git checkout) and receive
+`hominfer/catalog/lib.sh` (CUDA toolkit from pip wheels, GPU architecture, git checkout) and receive
 `INSTALL_DIR`, `MODELS_DIR` and `GPU_CC` in their environment.
 
 The page only sends a catalog id: scripts always come from this repository, never from the page. An engine

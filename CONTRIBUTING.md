@@ -5,8 +5,8 @@ Thanks for your interest! Bug reports, engine recipes, translations and fixes ar
 ## Development setup
 
 ```sh
-just test          # creates venv-hominfer if needed, installs requirements-dev.txt, runs pytest
-just run           # the launcher on http://localhost:8090
+just test          # creates venv-hominfer if needed, installs the package (editable) and pytest, runs pytest
+just run           # the launcher on http://127.0.0.1:8090 (HOMINFER_HOST=0.0.0.0 for the LAN)
 ```
 
 To try a change without touching your real configuration, run a second instance with its own port and
@@ -16,7 +16,7 @@ config folder:
 HOMINFER_PORT=8091 HOMINFER_CONFIG_DIR=/tmp/hominfer-dev venv-hominfer/bin/python -m hominfer
 ```
 
-The page has no build step: edit `web/`, reload the browser. Python changes need a restart of the
+The page has no build step: edit `hominfer/web_assets/`, reload the browser. Python changes need a restart of the
 launcher.
 
 Helpers:
@@ -32,7 +32,7 @@ Helpers:
   (no I/O, no imports from other layers), system access goes through `infra`, the web layer only
   translates HTTP to service calls.
 - **Small, focused files.** A module does one thing; split it before it becomes a catch-all.
-- **Every user-facing text is a locale key**, added to every file of `locales/` (`just test` checks it).
+- **Every user-facing text is a locale key**, added to every file of `hominfer/locales/` (`just test` checks it).
 - **English** for code, comments, docs and commit messages.
 - **Add tests** for domain rules and services (`tests/`); they must not depend on a GPU or on the local
   configuration.
@@ -41,12 +41,12 @@ Helpers:
 
 ## Adding an engine to the catalog
 
-1. Add an entry to `catalog/catalog.json`: `label`, `desc` (`{"en", "fr"}`), `url`, `dir` (install
+1. Add an entry to `hominfer/catalog/catalog.json`: `label`, `desc` (`{"en", "fr"}`), `url`, `dir` (install
    folder, under `~/llm`), `script`, `disk_gb`, `minutes`, optional `gpu` (vendors the build targets,
    e.g. `["nvidia"]`; omitted: any GPU or none), optional `min_cc` (minimum NVIDIA compute
    capability), and `engine`: the block written to `engines.json` (see
    [docs/configuration.md](docs/configuration.md#enginesjson)).
-2. Write `catalog/<engine>.sh`. Source `lib.sh`, check tools with `need`, use `cuda_toolkit` /
+2. Write `hominfer/catalog/<engine>.sh`. Source `lib.sh`, check tools with `need`, use `cuda_toolkit` /
    `cuda_arch` / `git_checkout` when building, and install into `$INSTALL_DIR`. The script must be
    idempotent: running it again updates the engine. No sudo.
 3. `just test` checks that the entry is valid and that its script exists.

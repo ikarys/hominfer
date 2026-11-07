@@ -102,7 +102,8 @@ refused while a download is running.
 ## Start the launcher at boot
 
 ```sh
-just install-service   # systemd service, started at boot (under WSL: when WSL starts)
+just install-service   # from a checkout: systemd service, started at boot (under WSL: when WSL starts)
+# installed with install.sh: rerun it with --service [--lan] instead
 just logs-service      # follow its logs
 just restart           # after an update of the code; stops the models it started
 ```
@@ -112,7 +113,7 @@ other machines, WSL's mirrored networking is the simplest (`networkingMode=mirro
 
 ## Add a UI language
 
-Copy `locales/en.json` to `locales/<code>.json` (e.g. `de.json`), translate the values and set
+Copy `hominfer/locales/en.json` to `hominfer/locales/<code>.json` (e.g. `de.json`), translate the values and set
 `"lang.name"` to the language's own name. Restart: it appears in **Settings → Language**.
 `just test` checks that every key used by the page and the server exists in every language.
 

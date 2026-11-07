@@ -1,4 +1,4 @@
-"""The page's assets (web/css, web/js...). The views themselves are rendered by page.py."""
+"""The page's assets (web_assets/css, web_assets/js...). The views themselves are rendered by page.py."""
 from .. import config
 
 TYPES = {".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8",
@@ -6,7 +6,7 @@ TYPES = {".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf
 
 
 def find(url_path):
-    """URL path -> (bytes, content type, etag), or None. Never serves anything outside web/."""
+    """URL path -> (bytes, content type, etag), or None. Never serves anything outside web_assets/."""
     root = config.WEB_DIR.resolve()
     f = (root / url_path.lstrip("/")).resolve()
     if not f.is_relative_to(root) or not f.is_file() or f.suffix not in TYPES:

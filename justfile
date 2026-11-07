@@ -1,17 +1,19 @@
 default: run
 
-# Run in the foreground: http://0.0.0.0:8090 (reachable from the LAN)
+# Run in the foreground: http://127.0.0.1:8090 (HOMINFER_HOST=0.0.0.0 for the LAN)
 run:
     ./run.sh
 
-# Run the tests (installs the dev requirements in venv-hominfer first)
+# Dev mode: same as run (the page has no build step, reload the browser after an edit)
+dev: run
+
+# Run the tests (installs the package and pytest in venv-hominfer first)
 test:
-    rm -rf venv-launcher  # pre-rename venv
     [ -x venv-hominfer/bin/python ] || uv venv -q --python 3.12 venv-hominfer
-    uv pip install -q --python venv-hominfer/bin/python -r requirements-dev.txt
+    uv pip install -q --python venv-hominfer/bin/python -e ".[dev]"
     venv-hominfer/bin/python -m pytest -q
 
-# Start the launcher at boot (systemd service)
+# Start the launcher at boot from this checkout (systemd service, reachable from the LAN)
 install-service:
     sudo rm -f /etc/systemd/system/hominfer.service  # old install = symlink to the template
     sed "s|@USER@|$USER|; s|@DIR@|$PWD|" hominfer.service | sudo tee /etc/systemd/system/hominfer.service >/dev/null

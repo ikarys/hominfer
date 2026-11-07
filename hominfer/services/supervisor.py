@@ -40,7 +40,7 @@ class Supervisor:
         self.pcache = {}     # pid -> psutil.Process (cpu_percent needs its history)
         self.snapshot = {"ready": False}
         self.ip = net.lan_ip()
-        log_dir.mkdir(exist_ok=True)
+        log_dir.mkdir(parents=True, exist_ok=True)
 
     def baseline_mib(self):
         return self.baseline if self.baseline is not None else self.default_baseline_mib

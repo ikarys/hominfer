@@ -1,11 +1,12 @@
 # Starts Hominfer at boot: http://0.0.0.0:8090 (reachable from the LAN)
-# Install with: just install-service
+# Install with: just install-service (checkout) or install.sh --service (installed command)
 [Unit]
 Description=Hominfer
 After=network.target
 
 [Service]
 User=@USER@
+Environment=HOMINFER_HOST=0.0.0.0
 ExecStart=@DIR@/run.sh
 Restart=on-failure
 

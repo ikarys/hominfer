@@ -12,7 +12,7 @@ from ..errors import LaunchError
 from ..i18n import tr
 
 API = "https://huggingface.co/api/models"
-CLI = [sys.executable, "-m", "huggingface_hub.cli.hf"]  # huggingface_hub: requirements.txt
+CLI = [sys.executable, "-m", "huggingface_hub.cli.hf"]  # huggingface_hub: a pyproject.toml dependency
 REPO = re.compile(r"[\w.-]+/[\w.-]+")
 
 

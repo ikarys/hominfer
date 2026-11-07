@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hominfer"
+version = "0.1.0"
+description = "Your AI models, served from home: start / stop local inference engines from any browser, with live VRAM, RAM and GPU."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+dependencies = [
+    "psutil>=7",
+    "huggingface_hub>=2.0,<3",
+]
+classifiers = [
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Environment :: Web Environment",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.urls]
+Homepage = "https://github.com/ikarys/hominfer"
+
+[project.scripts]
+hominfer = "hominfer.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["hominfer*"]
+
+[tool.setuptools.package-data]
+hominfer = ["web_assets/**/*", "locales/*.json", "catalog/*"]

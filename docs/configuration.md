@@ -1,6 +1,6 @@
 # Configuration
 
-The launcher keeps three local JSON files next to the code (or in `HOMINFER_CONFIG_DIR`). None of them
+The launcher keeps three local JSON files in `~/.config/hominfer` (or `HOMINFER_CONFIG_DIR`); files left next to the code by an older git checkout are copied there on first start. None of them
 is versioned, and all three are optional: the launcher starts with no engine, no model and the default
 settings.
 
@@ -70,9 +70,10 @@ UI language, falling back to English.
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `HOMINFER_HOST` | `0.0.0.0` | listen address (`127.0.0.1` = this machine only) |
+| `HOMINFER_HOST` | `127.0.0.1` | listen address (`0.0.0.0` = reachable from the LAN; the page has no login) |
 | `HOMINFER_PORT` | `8090` | listen port |
-| `HOMINFER_CONFIG_DIR` | the project folder | where the three JSON files live |
+| `HOMINFER_CONFIG_DIR` | `~/.config/hominfer` | where the three JSON files live |
+| `HOMINFER_LOG_DIR` | `~/.local/state/hominfer/logs` | model, download and install logs |
 | `HOMINFER_MODELS_DIR` | `~/hominfer_models` | models folder until one is set in Settings |
 | `HOMINFER_ALLOWED_HOSTS` | empty | extra host names the page is opened by (comma-separated), e.g. a local DNS name; IP addresses, `localhost` and the machine's name always work, any other name gets a 403 |
 | `HF_TOKEN` | | Hugging Face token, for gated or private models |
