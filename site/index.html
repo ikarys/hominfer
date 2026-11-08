@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>hominfer: run local AI models like home services</title>
-  <meta name="description" content="Pick a model from Hugging Face, see if it fits your GPU, install the engine it needs, then start and stop it from any browser on your network. Live VRAM, RAM, CPU and GPU load on every card.">
+  <meta name="description" content="Find a model on Hugging Face, check it fits your GPU, and run it from any browser on your network.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
@@ -369,6 +369,15 @@
       font-size: 16px;
     }
 
+    .story {
+      border-top: 1px solid var(--line);
+      padding: 96px 0;
+    }
+
+    .story p {
+      color: var(--muted);
+    }
+
     .get-started {
       border-top: 1px solid var(--line);
       padding: 96px 0;
@@ -481,7 +490,7 @@
     <section class="hero" aria-labelledby="hero-title">
       <div class="container">
         <h1 id="hero-title">Run local AI models like home services.</h1>
-        <p class="hero-lede">Pick a model from Hugging Face, see if it fits your GPU, install the engine it needs, then start and stop it from any browser on your network. Live VRAM, RAM, CPU and GPU load on every card.</p>
+        <p class="hero-lede">From Hugging Face to running, in a few clicks.</p>
 
         <div class="install">
           <div class="codebox">
@@ -577,6 +586,18 @@
             <dd>A scrolling page or a dense cockpit, in English or French.</dd>
           </div>
         </dl>
+      </div>
+    </section>
+
+    <section class="story" aria-labelledby="story-title">
+      <div class="container">
+        <h2 id="story-title">Why not Ollama or LM Studio?</h2>
+        <p>I went from Ollama to LM Studio to Unsloth Studio, chasing speed. Then a command-line engine doubled
+          it on the same GPU, and none of those apps could run it. Hominfer started as a single Start button
+          for it, and grew from there.</p>
+        <p>The fastest engine for your GPU is often one those apps don't run: a fresh llama.cpp build, vLLM, a
+          new project that only has a command line. Hominfer runs whichever you pick, with its own options,
+          from any browser at home.</p>
       </div>
     </section>
 
