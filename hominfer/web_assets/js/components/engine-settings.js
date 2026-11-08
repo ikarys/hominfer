@@ -3,10 +3,11 @@
 import { api } from "../api.js";
 import { $, esc } from "../dom.js";
 import { t } from "../i18n.js";
+import { bindEngineUpdates, updateHtml } from "./engine-update.js";
 
 let current = null;  // engine whose tab is open, kept across re-renders
 
-function fieldHtml(eid, p) {
+export function fieldHtml(eid, p) {
   const id = `ep-${eid}-${p.key}`, ph = t("ui.eng.no_default");
   const input = p.values
     ? `<select id="${esc(id)}" name="${esc(p.key)}"><option value=""${p.default ? "" : " selected"}>${esc(ph)}</option>${
@@ -26,7 +27,7 @@ function panelHtml(eid, e) {
   const off = e.installed ? "" : `<div><span class="tag">${esc(t("ui.eng.not_installed"))}</span></div>`;
   return `<form class="eng-panel" role="tabpanel" id="engpanel-${esc(eid)}" aria-labelledby="engtab-${esc(eid)}"
     data-eid="${esc(eid)}"${eid === current ? "" : " hidden"}>${off}
-    <pre class="eng-cmd">${esc(e.command)}</pre><div class="eng-params">${e.params.map(p => fieldHtml(eid, p)).join("")}</div>
+    <pre class="eng-cmd">${esc(e.command)}</pre>${updateHtml(eid, e)}<div class="eng-params">${e.params.map(p => fieldHtml(eid, p)).join("")}</div>
     ${e.params.length ? `<div class="row"><button>${esc(t("ui.form.save"))}</button></div>` : ""}</form>`;
 }
 
@@ -38,6 +39,7 @@ export async function loadEngineSettings() {
       ? `<div class="eng-tabs" role="tablist">${engines.map(([eid, e]) => tabHtml(eid, e)).join("")}</div>
          ${engines.map(([eid, e]) => panelHtml(eid, e)).join("")}`
       : "";
+    return Object.fromEntries(engines);
   } catch (err) { $("#engSetMsg").textContent = err.message; }
 }
 
@@ -80,4 +82,5 @@ export function bindEngineSettings() {
     const key = e.target.closest("[data-reset]")?.dataset.reset;
     if (key) e.target.closest("form").elements[key].value = "";
   });
+  bindEngineUpdates(box, loadEngineSettings, $("#engSetMsg"));
 }

@@ -5,8 +5,9 @@ import { bindFolderPicker } from "./components/folder-picker.js";
 import { bindHfBrowser } from "./components/hf-browser.js";
 import { bindModelForm } from "./components/model-form.js";
 import { on } from "./events.js";
+import { settings } from "./i18n.js";
 import { state } from "./state.js";
-import { buildCards, poll } from "./views/dashboard.js";
+import * as dashboard from "./views/dashboard.js";
 import { bindLibrary, loadLibrary } from "./views/library.js";
 import { bindModelsTable, renderModelsTable } from "./views/models-table.js";
 import { bindEngineSettings, loadEngineSettings } from "./components/engine-settings.js";
@@ -16,11 +17,16 @@ const VIEWS = { "/": "home", "/models": "manage", "/modeles": "manage", "/settin
 const VIEW = VIEWS[location.pathname] || "home";
 const POLL_MS = 2000;
 
+// a shell may bring a script (docs/theming.md): its own home view { build, poll }, manage() and settings() for its Models and Settings views
+document.body.classList.add("page-" + VIEW);
+const shell = settings.shellScript ? await import(settings.shellScript) : {};
+const { build, poll } = shell.home ?? { build: dashboard.buildCards, poll: dashboard.poll };
+
 // models.json or engines.json changed: fetch them again and redraw (show: model to display)
 async function reloadModels(show) {
   const r = await api("/api/models");
   Object.assign(state, { models: r.models, engines: r.engines, kinds: r.kinds, taskKind: r.task_kind });
-  buildCards(show);
+  build(show);
   renderModelsTable();
   await poll();
   if (VIEW === "manage") loadLibrary();  // elsewhere the model form fetches it when opened
@@ -33,12 +39,15 @@ bindModelsTable();
 bindEngineCatalog();
 bindHfBrowser();
 bindLibrary();
-bindSettings();
-bindEngineSettings();
+if (!shell.settings) { bindSettings(); bindEngineSettings(); }
 bindFolderPicker();
-document.body.classList.add("page-" + VIEW);
 document.querySelector(`.nav [data-view="${VIEW}"]`)?.classList.add("on");
 
 await reloadModels();
-if (VIEW === "home") setInterval(() => document.hidden || poll(), POLL_MS);
-if (VIEW === "settings") { loadEngines(); loadEngineSettings(); }
+// a shell with its own home also shows live data (its status band) on every page
+if (VIEW === "home" || shell.home) setInterval(() => document.hidden || poll(), POLL_MS);
+if (VIEW === "manage" && shell.manage) await shell.manage();
+if (VIEW === "settings") {
+  if (shell.settings) await shell.settings();
+  else { loadEngines(); loadEngineSettings(); }
+}

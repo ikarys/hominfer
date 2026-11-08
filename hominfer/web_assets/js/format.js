@@ -26,3 +26,6 @@ export function dur(s) {
 }
 
 export const initials = n => n.split(/[\s\-_.]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+
+// epoch seconds -> hh:mm:ss, local time
+export const clock = (epoch = Date.now() / 1000) => new Date(epoch * 1000).toTimeString().slice(0, 8);

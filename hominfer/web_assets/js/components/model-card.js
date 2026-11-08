@@ -1,4 +1,4 @@
-// A model card: state, usage, options / profiles, start / stop / logs / engine update
+// A model card: state, usage, options / profiles, start / stop / logs
 import { api } from "../api.js";
 import { $, esc } from "../dom.js";
 import { emit } from "../events.js";
@@ -21,7 +21,9 @@ export function cardHtml(id, m, hidden) {
         </div>
         <span class="pill" data-k="pill"><span class="dot"></span><span data-k="state">–</span></span>
       </div>
+      <div class="endpoint" data-k="endpoint"></div>
       <p class="desc">${esc(m.desc)}</p>
+      <a class="meta txt-warn" data-k="engBehind" href="/settings" hidden></a>
       <div class="metrics off" data-k="metrics">
         <div class="metric"><div class="m"><i data-k="vramM"></i></div><b data-k="vram">–</b><span data-k="vramHow">VRAM</span></div>
         <div class="metric"><div class="m"><i data-k="ramM"></i></div><b data-k="ram">–</b><span>RAM</span></div>
@@ -33,17 +35,13 @@ export function cardHtml(id, m, hidden) {
         <div class="caption">${esc(t("ui.card.engine_metrics"))}</div>
       </div>
       <div class="opts">${optionsHtml(m)}</div>
-      <div class="endpoint" data-k="endpoint"></div>
       <div class="actions">
         <button class="primary" data-act="start">${esc(t("ui.card.start"))}</button>
         <button class="danger" data-act="stop">${esc(t("ui.card.stop"))}</button>
         <button class="link" data-act="logs">${esc(t("ui.card.logs"))}</button>
-        ${m.repo ? `<button class="link" data-act="update">${esc(t("ui.card.check_update"))}</button>` : ""}
         <button class="link" data-act="edit">${esc(t("ui.card.edit"))}</button>
       </div>
       <div class="msg" data-k="msg"></div>
-      <div class="meta" data-k="update" hidden></div>
-      <div class="meta" data-k="upgrade" hidden></div>
       <pre class="log" data-k="log" hidden></pre>
     </article>`;
 }
@@ -59,8 +57,8 @@ function optionsHtml(m) {
       <select data-opt="${o.key}">${o.choices.map(([v, l]) =>
         `<option value="${esc(v)}"${v === o.default ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>
     </label>`).join("")}
-    <button class="link" data-act="saveprof">${esc(t("ui.card.save_profile"))}</button>
-    <button class="link" data-act="delprof">${esc(t("ui.card.delete_profile"))}</button>`;
+    <button data-act="saveprof">${esc(t("ui.card.save_profile"))}</button>
+    <button data-act="delprof">${esc(t("ui.card.delete_profile"))}</button>`;
 }
 
 // profile = a set of option values: picking one fills the menus, touching a menu resyncs the profile
@@ -116,32 +114,6 @@ function toggleLogs(id, card) {
   if (openLogs.has(id)) refreshLog(id);
 }
 
-async function checkUpdate(id, card, button) {
-  const out = $("[data-k=update]", card);
-  button.disabled = true;
-  out.hidden = false;
-  out.textContent = "git fetch…";
-  try {
-    const u = await api(`/api/check/${id}`, {});
-    out.innerHTML = u.behind.length
-      ? `<b style="color:var(--warn)">${esc(t("ui.upd.behind", { n: u.behind.length }))}</b> `
-        + esc(t("ui.upd.behind_on", { branch: u.branch, current: u.current }))
-        + `<pre class="log">${esc(u.behind.join("\n"))}</pre>`
-        + `<div class="actions" style="margin-top:8px"><button data-act="upgrade">${esc(t("ui.upd.upgrade"))}</button></div>`
-      : esc(t("ui.upd.up_to_date", { current: u.current, branch: u.branch }));
-  } catch (err) { out.textContent = ""; showError(card, err); }
-  button.disabled = false;
-}
-
-async function upgrade(id, card) {
-  if (!confirm(t("ui.upd.confirm", { engine: state.models[id].engine }))) return;
-  try {
-    await api(`/api/update/${id}`, {});
-    $("[data-k=update]", card).hidden = true;
-  } catch (err) { showError(card, err); }
-  emit("poll");
-}
-
 async function startStop(id, card, button, act) {
   if (act === "stop" && !confirm(t("ui.card.stop_confirm", { name: state.models[id].name }))) return;
   button.disabled = true;
@@ -152,13 +124,25 @@ async function startStop(id, card, button, act) {
   emit("poll");
 }
 
+async function copyUrl(id, card, button) {
+  const b = button.closest("button");
+  if (!b) return;
+  try {
+    await navigator.clipboard.writeText(b.dataset.url);
+    b.textContent = t("ui.card.copied");
+    setTimeout(() => { b.textContent = t("ui.card.copy"); }, 1500);
+  } catch {
+    const code = b.previousElementSibling;
+    if (code) window.getSelection().selectAllChildren(code);
+  }
+}
+
 const ACTIONS = {
   edit: id => openModelForm(id),
   saveprof: saveOrDeleteProfile,
   delprof: saveOrDeleteProfile,
   logs: toggleLogs,
-  update: checkUpdate,
-  upgrade,
+  copy: copyUrl,
 };
 
 async function refreshLog(id) {
@@ -182,9 +166,16 @@ export function updateCard(id, s, st) {
     + (s.state === "ready" && !s.managed ? t("ui.state.external") : "");
   updateMetrics(id, card, s, st, running);
   updateEngineMetrics(card, s.metrics);
-  const lan = st.lan_ip ? `  ·  LAN <code>http://${st.lan_ip}:${m.port}${m.endpoint}</code>` : "";
-  $("[data-k=endpoint]", card).innerHTML = s.state === "ready"
-    ? `Local <code>http://127.0.0.1:${m.port}${m.endpoint}</code>${lan}` : "";
+  const eb = $("[data-k=engBehind]", card);
+  eb.hidden = !s.engine_behind;
+  if (s.engine_behind) eb.textContent = t("ui.card.engine_behind", { n: s.engine_behind });
+  const el = $("[data-k=endpoint]", card);
+  const urls = s.state === "ready" ? [["ui.card.ep_local", `http://127.0.0.1:${m.port}${m.endpoint}`]] : [];
+  if (s.state === "ready" && st.lan_ip) urls.push(["ui.card.ep_lan", `http://${st.lan_ip}:${m.port}${m.endpoint}`]);
+  const html = urls.map(([k, url]) =>
+    `<div class="ep"><span>${esc(t(k))}</span><code>${esc(url)}</code><button class="link" data-act="copy" data-url="${esc(url)}">${esc(t("ui.card.copy"))}</button></div>`).join("");
+  if (el.dataset.html !== html) el.innerHTML = el.dataset.html = html;
+  el.hidden = !urls.length;
   card.querySelectorAll("[data-opt]").forEach(sel => {
     sel.disabled = running;
     if (running && s.opts) sel.value = s.opts[sel.dataset.opt] ?? sel.value;
@@ -194,7 +185,6 @@ export function updateCard(id, s, st) {
   $("[data-act=start]", card).disabled = running || s.state === "stopping";
   $("[data-act=stop]", card).disabled = !running || s.state === "stopping";
   if (s.error) $("[data-k=msg]", card).textContent = s.error;
-  updateUpgrade(card, s.update);
   if (openLogs.has(id)) refreshLog(id);
 }
 
@@ -218,15 +208,4 @@ function updateEngineMetrics(card, items) {
   $("[data-k=engine]", card).hidden = !items?.length;
   $("[data-k=engineTiles]", card).innerHTML = (items || []).map(i =>
     `<div class="metric"><b>${esc(metric(i.value, i.unit))}</b><span>${esc(i.label)}</span></div>`).join("");
-}
-
-// engine update running / done / failed, with its log
-function updateUpgrade(card, u) {
-  const up = $("[data-k=upgrade]", card);
-  up.hidden = !u;
-  if (!u) return;
-  const color = { running: "var(--warn)", done: "var(--ok)", error: "var(--err)" }[u.state];
-  const pre = $("pre", up), atBottom = !pre || pre.scrollTop + pre.clientHeight >= pre.scrollHeight - 20;
-  up.innerHTML = `<b style="color:${color}">${esc(u.msg)}</b>` + (u.log ? `<pre class="log">${esc(u.log)}</pre>` : "");
-  if (atBottom) $("pre", up)?.scrollTo(0, 1e9);
 }

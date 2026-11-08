@@ -11,9 +11,9 @@ const COLUMNS = ["model", "kind", "engine", "file", "port"];
 export function renderModelsTable() {
   $("#cfgTable").innerHTML = `<thead><tr>${COLUMNS.map(c => `<th>${esc(t("ui.col." + c))}</th>`).join("")}<th></th></tr></thead>
     <tbody>${Object.entries(state.models).map(([id, m]) => `<tr>
-      <td><b>${esc(m.name)}</b> <span class="meta" style="margin:0">${esc(id)}</span></td>
+      <td><b>${esc(m.name)}</b> <span class="meta flat">${esc(id)}</span></td>
       <td>${esc(state.kinds[m.kind] || m.kind)}</td><td>${esc(m.engine)}</td>
-      <td style="font-family:var(--mono);font-size:12px;word-break:break-all">${esc(m.config.file || "–")}</td>
+      <td class="path">${esc(m.config.file || "–")}</td>
       <td class="num">${m.port}</td>
       <td><button class="link" data-edit="${esc(id)}">${esc(t("ui.card.edit"))}</button></td></tr>`).join("")}</tbody>`;
 }

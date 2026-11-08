@@ -1,0 +1,27 @@
+<div class="ck">
+  <header class="ck-band">
+    <div class="ck-brand">
+      <h1><a href="/">Hominfer</a></h1>
+      <span class="build" title="{{BUILD_DATE}}">{{BUILD}}</span>
+      <span class="ck-gpu meta flat" id="ckGpu"></span>
+    </div>
+    <div class="ck-gauges home" id="ckGauges" role="group" aria-label="{{t:ui.ck.status}}"></div>
+    <div class="ck-mini" id="ckMini"></div>
+    <div class="ck-tools settings">
+      <a class="btn" href="/models">{{t:ui.nav.models}}</a>
+    </div>
+    <div class="ck-end">
+      <span class="ck-state" id="ckState" role="status"><i class="ck-light" id="ckLight"></i><b id="ckStateText">–</b></span>
+      <time class="ck-clock" id="ckClock"></time>
+      <span class="conn" id="conn"></span>
+      <nav class="nav">
+        <a href="/" data-view="home">{{t:ui.nav.dashboard}}</a>
+        <a href="/models" data-view="manage">{{t:ui.nav.models}}</a>
+        <a href="/settings" data-view="settings">{{t:ui.nav.settings}}</a>
+      </nav>
+    </div>
+  </header>
+  <main class="ck-main">
+{{VIEWS}}
+  </main>
+</div>

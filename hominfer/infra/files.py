@@ -1,4 +1,4 @@
-"""Files: atomic writes, hand-readable JSON, log tails, sizes."""
+"""Files: atomic writes, hand-readable JSON, log tails, caps, pruning, sizes."""
 import json
 import os
 import re
@@ -52,6 +52,29 @@ def tail(path, lines=150):
     except FileNotFoundError:
         return ""
     return "\n".join(ANSI.sub("", text).splitlines()[-lines:])
+
+
+def cap_log(path, max_bytes):
+    """Empty a log past max_bytes. The writer must hold it in append mode (O_APPEND), or truncating leaves a hole."""
+    if not path.is_file() or path.stat().st_size <= max_bytes:
+        return False
+    with open(path, "r+") as f:
+        f.truncate(0)
+        f.write(f"--- log truncated by hominfer (over {max_bytes // 2**20} MiB) ---\n")
+    return True
+
+
+def prune(folder, pattern, keep):
+    """Delete all files matching pattern except the keep most recent."""
+    files = sorted((p for p in folder.glob(pattern) if p.is_file()), key=lambda p: p.stat().st_mtime, reverse=True)
+    deleted = 0
+    for p in files[keep:]:
+        try:
+            p.unlink()
+            deleted += 1
+        except FileNotFoundError:
+            pass
+    return deleted
 
 
 def size_of(path):

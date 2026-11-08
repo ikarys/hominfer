@@ -1,11 +1,16 @@
-/* Colour tokens: light by default, dark from the system or forced with data-theme */
+/* Tokens: colours (light by default, dark from the system or forced with data-theme="dark"), fonts, shape.
+   Other themes override them in css/themes/<name>.css, see docs/theming.md */
 :root {
   --bg: #f6f5f1; --panel: #ffffff; --panel-2: #f0eee8; --line: #e2dfd6;
   --text: #22211d; --muted: #6d6a60; --faint: #9a968a;
   --accent: #367a6b; --accent-ink: #ffffff;
   --ok: #2f8a4f; --warn: #b7791f; --err: #c0392b; --idle: #a8a497;
   --seg-1: #3d6fd6; --seg-2: #d0782f; --seg-other: #9a968a;
-  --mono: ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+  --font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-body);  /* h1, h2, big numbers */
+  --font-mono: ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas, monospace;
+  --radius: 12px; --radius-sm: 8px;  /* panels and dialogs; buttons, metrics */
+  --border-w: 1px; --shadow-panel: none;  /* panels, dialogs, controls */
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {

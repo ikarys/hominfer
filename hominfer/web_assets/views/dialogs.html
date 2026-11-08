@@ -1,0 +1,43 @@
+<dialog id="modelDlg">
+  <form id="modelForm">
+    <h2 id="modelTitle">{{t:ui.form.title}}</h2>
+    <div class="form">
+      <label>{{t:ui.form.name}}<input name="name" required></label>
+      <label>{{t:ui.form.id}}<input name="id" pattern="\w+" placeholder="auto" title="{{t:ui.form.id_hint}}"></label>
+      <label>{{t:ui.form.kind}}<select name="kind" id="kindSel"></select></label>
+      <label>{{t:ui.form.engine}}<select name="engine" id="engineSel"></select></label>
+      <label>{{t:ui.form.task}}<input name="task" list="taskList" placeholder="{{t:ui.form.task_ph}}"
+        title="{{t:ui.form.task_hint}}"></label>
+      <label class="wide">{{t:ui.form.desc}}<input name="desc"></label>
+      <label class="wide" id="fileField">{{t:ui.form.file}}<input name="file" list="fileList"
+        placeholder="~/hominfer_models/…"><span class="hint">{{t:ui.form.file_hint}}</span></label>
+      <label>{{t:ui.form.port}}<input name="port" type="number" min="1024" max="65535" required></label>
+      <label>{{t:ui.form.vram}}<span id="vramInfo" class="form-value"></span>
+        <span class="hint">{{t:ui.form.vram_hint}}</span></label>
+      <div class="wide hint">{{t:ui.form.params_hint}}</div>
+      <div class="wide form" id="paramFields"></div>
+    </div>
+    <p class="msg" id="modelMsg"></p>
+    <div class="actions dlg-actions">
+      <button class="primary" value="save">{{t:ui.form.save}}</button>
+      <button type="button" class="link" id="modelCancel">{{t:ui.form.cancel}}</button>
+      <button type="button" class="link bad push" id="modelDelete">{{t:ui.form.delete}}</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="folderDlg">
+  <h2>{{t:ui.folder.title}}</h2>
+  <div class="row" id="folderShortcuts"></div>
+  <div class="row folder-path">
+    <button type="button" class="link" id="folderUp">↑ {{t:ui.folder.up}}</button>
+    <code id="folderPath"></code>
+  </div>
+  <div class="folders" id="folderList"></div>
+  <p class="msg" id="folderMsg"></p>
+  <div class="actions dlg-actions">
+    <button type="button" class="primary" id="folderChoose">{{t:ui.folder.choose}}</button>
+    <button type="button" class="link" id="folderCancel">{{t:ui.form.cancel}}</button>
+  </div>
+</dialog>
+<datalist id="taskList"></datalist>
+<datalist id="fileList"></datalist>

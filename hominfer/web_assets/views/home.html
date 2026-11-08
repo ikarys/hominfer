@@ -1,0 +1,34 @@
+  <section class="panel sys home">
+    <div>
+      <h3>VRAM <span id="gpuName" class="gpu-name"></span></h3>
+      <div class="big" id="vramBig">–</div>
+      <div class="bar" id="vramBar"></div>
+      <div class="legend" id="vramLegend"></div>
+      <div class="win-gpu" id="winGpu" hidden></div>
+    </div>
+    <div>
+      <h3>GPU</h3>
+      <div class="big" id="gpuBig">–</div>
+      <div id="gpuSpark"></div>
+      <div class="meta" id="gpuMeta"></div>
+    </div>
+    <div>
+      <h3>{{t:ui.sys.ram}}</h3>
+      <div class="big" id="ramBig">–</div>
+      <div id="ramSpark"></div>
+      <div class="meta" id="ramMeta">{{t:ui.sys.ram_hint}}</div>
+    </div>
+    <div>
+      <h3>CPU</h3>
+      <div class="big" id="cpuBig">–</div>
+      <div id="cpuSpark"></div>
+      <div class="meta" id="cpuMeta"></div>
+    </div>
+  </section>
+
+  <section class="cards home" id="cards"></section>
+
+  <details class="panel events home" id="events">
+    <summary>{{t:ui.events.title}} <span class="meta" id="eventsCount"></span></summary>
+    <ol class="ev-list" id="eventsList"></ol>
+  </details>

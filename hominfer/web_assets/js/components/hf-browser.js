@@ -20,16 +20,16 @@ const variantHtml = v => `
     <span class="name">${esc(v.name)}</span>
     ${v.quant ? `<span class="tag">${esc(v.quant)}</span>` : ""}
     <span class="verdict v-${v.verdict}">${esc(t("ui.verdict." + v.verdict))}</span>
-    <span class="meta" style="margin:0">${size(v.size)}</span>
+    <span class="meta flat">${size(v.size)}</span>
     <span class="why">${esc(v.why)}${v.suggest ? ` ${installButton(v.suggest)}` : ""}</span>
   </label>`;
 
 const alternativeHtml = a => `<div class="row">
   <span><b>${esc(a.repo)}</b> · ${esc(a.name)} <span class="tag">${esc(a.quant || "?")}</span> ${size(a.size)}
-    <span class="meta" style="margin:0">· ${esc(t("ui.hf.downloads", { n: count(a.downloads) }))}</span></span>
+    <span class="meta flat">· ${esc(t("ui.hf.downloads", { n: count(a.downloads) }))}</span></span>
   <button class="link" data-browse="${esc(a.repo)}">${esc(t("ui.hf.view"))}</button>
   <button class="link" data-quick="${esc(a.repo)}" data-files="${esc(JSON.stringify(a.files))}">${esc(t("ui.hf.download"))}</button>
-  <span class="why" style="padding-left:0">${esc(a.why)}</span></div>`;
+  <span class="why inline">${esc(a.why)}</span></div>`;
 
 // what to say under the variants when nothing runs here
 function adviceHtml(d) {
@@ -55,12 +55,12 @@ function repoHtml(d) {
   const section = esc(d.kind && state.kinds[d.kind] ? t("ui.hf.section", { kind: state.kinds[d.kind] }) : t("ui.hf.no_section"));
   const task = d.task ? ` · ${esc(t("ui.hf.task"))} <span class="tag">${esc(d.task)}</span> → ${section}` : "";
   const files = d.variants.length ? `<div class="hf-files">${d.variants.map(variantHtml).join("")}</div>
-    <div class="row" style="margin:8px 0">
+    <div class="row my-8">
       <button class="primary" id="hfDownload" data-repo="${esc(d.repo)}">${esc(t("ui.hf.download_selection"))}</button>
-      <span class="meta" id="hfSel" style="margin:0"></span></div>`
+      <span class="meta flat" id="hfSel"></span></div>`
     : `<p class="meta">${esc(t("ui.hf.no_files"))}</p>`;
   return `
-    <div class="meta" style="margin:0 0 6px">${esc(d.repo)} · commit <code>${esc(d.sha.slice(0, 7))}</code>
+    <div class="meta flat mb-6">${esc(d.repo)} · commit <code>${esc(d.sha.slice(0, 7))}</code>
       · ${esc(t("ui.hf.updated", { date: (d.modified || "").slice(0, 10) }))}${
       d.gated ? ` · <b>${esc(t("ui.hf.gated"))}</b>` : ""}${task}</div>
     ${files}${adviceHtml(d)}`;

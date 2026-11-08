@@ -10,7 +10,7 @@ import time
 from functools import cache
 from pathlib import Path
 
-QUERY = "name,memory.used,memory.total,utilization.gpu,temperature.gpu,power.draw,compute_cap"
+QUERY = "name,memory.used,memory.total,utilization.gpu,temperature.gpu,power.draw,compute_cap,enforced.power.limit"
 RETRY_S = 30  # no NVIDIA GPU / driver: nvidia-smi fails in ~0.2 s, don't pay it on every poll
 _retry_at = 0.0
 
@@ -27,7 +27,7 @@ def _smi(*args):
 
 
 def query():
-    """-> {vendor, name, used, total (MiB), util, temp, power, cc, pids, unified} or None without a usable GPU.
+    """-> {vendor, name, used, total (MiB), util, temp, power, power_max (W), cc, pids, unified} or None without a usable GPU.
     pids: the PIDs known to use the GPU (NVIDIA); AMD gives per-process memory instead (process_mib)."""
     return _nvidia() or _amd()
 
@@ -38,10 +38,10 @@ def _nvidia():
         return None
     try:
         line = _smi(f"--query-gpu={QUERY}", "--format=csv,noheader,nounits").strip().splitlines()[0]
-        name, used, total, util, temp, power, cc = [x.strip() for x in line.split(",")]
+        name, used, total, util, temp, power, cc, power_max = [x.strip() for x in line.split(",")]
         apps = _smi("--query-compute-apps=pid", "--format=csv,noheader").split()
         return {"vendor": "nvidia", "unified": False, "name": name, "used": int(used), "total": int(total), "util": _num(util),
-                "temp": _num(temp), "power": _num(power), "cc": _num(cc),
+                "temp": _num(temp), "power": _num(power), "power_max": _num(power_max), "cc": _num(cc),
                 "pids": {int(p) for p in apps if p.strip().isdigit()}}
     except Exception:
         # ponytail: a transient failure on a real GPU also hides it for RETRY_S
@@ -95,7 +95,7 @@ def _amd():
     power = hwmon and (_read(hwmon / "power1_average", 1e6) or _read(hwmon / "power1_input", 1e6))
     return {"vendor": "amd", "unified": unified, "name": _amd_name(dev), "used": round(used), "total": round(total),
             "util": _read(dev / "gpu_busy_percent"), "temp": hwmon and _read(hwmon / "temp1_input", 1000),
-            "power": power, "cc": None, "pids": set(), "pdev": dev.resolve().name}
+            "power": power, "power_max": hwmon and _read(hwmon / "power1_cap", 1e6), "cc": None, "pids": set(), "pdev": dev.resolve().name}
 
 
 def process_mib(pids, pdev, unified):

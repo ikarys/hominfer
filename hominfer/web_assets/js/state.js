@@ -6,6 +6,8 @@ export const state = {
   taskKind: {},   // Hugging Face task -> kind
   lib: null,      // /api/library
   last: null,     // last /api/status
+  events: [],     // /api/events, oldest first (the newest 300)
+  eventsLast: 0,  // id of the newest event known
 };
 
 // model colour: by position in models.json (no model id hard-coded)

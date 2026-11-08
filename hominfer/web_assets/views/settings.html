@@ -1,0 +1,32 @@
+  <div class="settings">
+  <section class="panel lib">
+    <div class="lib-head"><h3>{{t:ui.set.general}}</h3></div>
+    <div class="opts">
+      <label>{{t:ui.set.lang}}<select id="setLang"></select></label>
+      <label>{{t:ui.set.theme}}<select id="setTheme"></select></label>
+      <label>{{t:ui.set.shell}}<select id="setShell"></select></label>
+    </div>
+    <form class="row" id="setModelsDir">
+      <label class="field">{{t:ui.set.models_dir}}<input name="models_dir" required></label>
+      <button type="button" id="setBrowse">{{t:ui.set.browse}}</button>
+      <button>{{t:ui.form.save}}</button>
+    </form>
+    <div class="meta flat">{{t:ui.set.models_dir_hint}}</div>
+    <div class="msg" id="setMsg"></div>
+    <div class="meta flat">{{t:ui.set.hint}}</div>
+  </section>
+
+  <section class="panel lib" id="enginesSec">
+    <div class="lib-head"><h3>{{t:ui.eng.title}}</h3>
+      <span class="meta flat">{{t:ui.eng.sub}}</span></div>
+    <div class="msg" id="engMsg"></div>
+    <div class="table-wrap"><table id="engTable"></table></div>
+  </section>
+
+  <section class="panel lib" id="engSettingsSec">
+    <div class="lib-head"><h3>{{t:ui.eng.settings_title}}</h3>
+      <span class="meta flat">{{t:ui.eng.settings_sub}}</span></div>
+    <div class="msg" id="engSetMsg" role="status"></div>
+    <div id="engSettings" class="eng-settings"></div>
+  </section>
+  </div>

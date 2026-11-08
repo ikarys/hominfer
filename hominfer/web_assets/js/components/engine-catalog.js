@@ -8,6 +8,7 @@ import { state } from "../state.js";
 const STATE_CLASS = { configured: "gpu", present: "partial", available: "extra" };
 let catalog = [], timer = null;
 
+
 // "install" link offered by a Hugging Face verdict (s: the suggested catalog engine)
 export function installButton(s) {
   const what = s.state === "present" ? t("ui.eng.configure_named", { label: s.label })
@@ -17,14 +18,15 @@ export function installButton(s) {
 
 export async function loadEngines() {
   clearTimeout(timer);
-  try { catalog = (await api("/api/engines")).catalog; } catch (err) { $("#engMsg").textContent = err.message; return; }
+  try { catalog = (await api("/api/engines")).catalog; } catch (err) { const m = $("#engMsg"); if (m) m.textContent = err.message; return; }
   render();
+  emit("engines", catalog);  // a shell may draw the list its own way
   if (catalog.some(c => c.job?.state === "running")) timer = setTimeout(loadEngines, 3000);
 }
 
 function actionHtml(c) {
-  if (!c.compatible) return `<span class="meta" style="margin:0">${esc(c.why)}</span>`;
-  if (c.job?.state === "running") return `<span class="meta" style="margin:0">${esc(t("ui.eng.installing"))}</span>`;
+  if (!c.compatible) return `<span class="meta flat">${esc(c.why)}</span>`;
+  if (c.job?.state === "running") return `<span class="meta flat">${esc(t("ui.eng.installing"))}</span>`;
   const label = c.state === "configured" ? t("ui.eng.update") : c.state === "present" ? t("ui.eng.configure")
     : t("ui.eng.install", { disk: c.disk_gb, min: c.minutes });
   return `<button class="${c.state === "available" ? "primary" : "link"}" data-install="${esc(c.id)}">${esc(label)}</button>`;
@@ -32,21 +34,22 @@ function actionHtml(c) {
 
 function jobHtml(job) {
   if (!job) return "";
-  const color = { done: "var(--ok)", error: "var(--err)" }[job.state] || "inherit";
+  const color = { done: "txt-ok", error: "txt-bad" }[job.state] || "";
   return `<tr class="sub"><td colspan="4">
-    <div class="meta" style="margin:0 0 4px;color:${color}">${esc(job.msg)}</div>
+    <div class="meta flat mb-4 ${color}">${esc(job.msg)}</div>
     <pre class="log">${esc(job.log)}</pre></td></tr>`;
 }
 
 function render() {
+  if (!$("#engTable")) return;
   const head = ["engine", "runs", "state"].map(c => `<th>${esc(t("ui.col." + c))}</th>`).join("");
   $("#engTable").innerHTML = `<thead><tr>${head}<th></th></tr></thead><tbody>${
     catalog.map(c => {
       const runs = [...c.file_ext, ...c.kinds.map(k => state.kinds[k] || k)];
       return `<tr>
         <td><b>${esc(c.label)}</b> <a class="meta" href="${esc(c.url)}" target="_blank" rel="noopener">${esc(t("ui.eng.site"))}</a>
-          <div class="meta" style="margin:2px 0 0">${esc(c.desc)}</div>
-          <div class="meta" style="margin:2px 0 0;font-family:var(--mono)">${esc(c.dir)}</div></td>
+          <div class="meta flat mt-2">${esc(c.desc)}</div>
+          <div class="meta flat mt-2 mono">${esc(c.dir)}</div></td>
         <td>${runs.map(x => `<span class="tag">${esc(x)}</span>`).join(" ")}</td>
         <td><span class="verdict v-${STATE_CLASS[c.state]}">${esc(t("ui.eng.state." + c.state))}</span></td>
         <td>${actionHtml(c)}</td></tr>${jobHtml(c.job)}`;
@@ -86,7 +89,7 @@ function whenInstalled(id) {
 }
 
 export function bindEngineCatalog() {
-  $("#engTable").addEventListener("click", e => {
+  $("#engTable")?.addEventListener("click", e => {
     const id = e.target.closest("[data-install]")?.dataset.install;
     if (id) installEngine(id);
   });

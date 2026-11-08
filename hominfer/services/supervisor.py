@@ -4,6 +4,8 @@ usage (VRAM, RAM, CPU) for the page.
 Models started here are stopped when the launcher stops. An engine started outside the launcher
 is detected by its process names, and can be stopped too.
 """
+import os
+import shlex
 import sys
 import threading
 import time
@@ -12,24 +14,28 @@ from concurrent.futures import ThreadPoolExecutor
 import psutil
 
 from ..domain import engine as engine_rules
+from ..domain import events as event_rules
 from ..domain.model import clean_options
 from ..domain.status import baseline_ok, model_state, model_vram, on_gpu_for
 from ..errors import LaunchError
 from ..i18n import gib, tr
 from ..infra import net, processes
-from ..infra.files import tail
+from ..infra.files import cap_log, tail
+
+LOG_CAP = 50 * 2**20  # a running model's log is emptied past this size
 
 
 class Supervisor:
     def __init__(self, registry, updates, *, gpu, keep_awake, log_dir, models_dir, default_baseline_mib,
-                 gpu_mem=None, engine_metrics=None, win_gpu=None):
+                 gpu_mem=None, engine_metrics=None, win_gpu=None, events=None):
         """gpu: () -> GPU state or None; keep_awake: .set(bool) holds off the host's sleep;
         models_dir: () -> the models folder (a setting);
         gpu_mem: (pids, pdev, unified) -> {pid: MiB}, the per-process GPU memory when the driver gives it (AMD);
         engine_metrics: .collect(ids) -> {id: metrics} of the engines that expose some;
-        win_gpu: () -> [{name, bytes}] GPU memory reserved by Windows processes (WSL), or None."""
+        win_gpu: () -> [{name, bytes}] GPU memory reserved by Windows processes (WSL), or None;
+        events: the EventLog that gets what changed between two polls and the start / stop requests."""
         self.registry, self.updates, self.gpu, self.keep_awake = registry, updates, gpu, keep_awake
-        self.gpu_mem, self.engine_metrics, self.win_gpu = gpu_mem, engine_metrics, win_gpu
+        self.gpu_mem, self.engine_metrics, self.win_gpu, self.events = gpu_mem, engine_metrics, win_gpu, events
         self.log_dir, self.models_dir, self.default_baseline_mib = log_dir, models_dir, default_baseline_mib
         self.lock = threading.RLock()
         self.poll_lock = threading.Lock()  # the loop and the HTTP actions both poll
@@ -85,6 +91,8 @@ class Supervisor:
 
     def _poll(self):
         gpu, procs = self.gpu(), self.find()
+        for mid in (mid for mid, ps in procs.items() if ps):
+            cap_log(self.log_dir / f"{mid}.log", LOG_CAP)
         healthy = self._probe(procs)
         running = any(procs.values())
         metrics = self.engine_metrics.collect([mid for mid, ok in healthy.items() if ok]) if self.engine_metrics else {}
@@ -112,6 +120,7 @@ class Supervisor:
         ram = {"used_mib": round((vm.total - vm.available) / 2**20), "total_mib": round(vm.total / 2**20)}
         self.last_gpu = gpu
         win = self.win_gpu() if self.win_gpu else None
+        prev = self.snapshot
         self.snapshot = {
             "ready": True, "time": time.time(), "lan_ip": self.ip,
             "gpu": gpu and {k: v for k, v in gpu.items() if k not in ("pids", "pdev")} | {
@@ -122,6 +131,9 @@ class Supervisor:
             "models": models,
         }
         self.keep_awake.set(any(v["pids"] for v in models.values()))
+        if self.events:
+            names = {mid: m["name"] for mid, m in self.registry.models.items()}
+            self.events.extend(event_rules.diff(prev, self.snapshot, self.snapshot["time"], names))
 
     def _gpu_mem(self, gpu, procs):
         """{model id: GPU memory in MiB} when the driver reports it per process, else None."""
@@ -152,7 +164,7 @@ class Supervisor:
             "cpu_machine_pct": round(cpu / ncpu, 1) if ps else None,
             "uptime_s": round(time.time() - started) if started else None,
             "opts": run["opts"] if run else None,
-            "update": self.updates.status(mid),
+            "engine_behind": self.updates.behind(m["engine_id"]),
         }
 
     def _check_exit(self, mid, ps):
@@ -209,6 +221,7 @@ class Supervisor:
             header = f"$ {' '.join(argv)}\n  {' '.join(f'{k}={v}' for k, v in env.items())}\n\n"
             popen = processes.spawn(argv, self.log_dir / f"{mid}.log", env=env, header=header)
             self.runs[mid] = {"popen": popen, "opts": clean, "vram_before": gpu and gpu["used"], "vram_load": None}
+            self._log("run", "start_req", mid)
             self.errors.pop(mid, None)
 
     def _refuse_no_vram(self, mid, free, need):
@@ -225,7 +238,12 @@ class Supervisor:
                 self.runs.pop(mid, None)
                 return
             self.stopping.add(mid)
+            self._log("info", "stop_req", mid)
         threading.Thread(target=self._kill, args=(mid, procs), daemon=True).start()
+
+    def _log(self, level, key, mid):
+        if self.events:
+            self.events.add(level, key, mid, name=self.registry.models[mid]["name"])
 
     def _kill(self, mid, procs):
         run = self.runs.get(mid)

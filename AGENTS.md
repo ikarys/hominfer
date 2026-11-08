@@ -8,7 +8,7 @@ and a plain HTML / ES modules page, no build step. Runs on Linux and under WSL.
 
 - `hominfer/`: server. Layers `web` → `services` → `domain`, system access in `infra`
   (details: [docs/architecture.md](docs/architecture.md)).
-- `hominfer/web_assets/`: the page (`index.html`, `css/`, `js/`), shipped in the package.
+- `hominfer/web_assets/`: the page (`index.html`, `shells/`, `views/`, `css/`, `js/`; see docs/theming.md), shipped in the package.
 - `hominfer/locales/`: UI strings, one JSON per language.
 - `hominfer/catalog/`: engine install recipes (`catalog.json` + one script each).
 - `install.sh`: curl installer (uv tool install, optional systemd service).

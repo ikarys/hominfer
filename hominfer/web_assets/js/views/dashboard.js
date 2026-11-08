@@ -1,5 +1,6 @@
 // Home view: system panel (VRAM, GPU, RAM, CPU) and the model cards, grouped by kind
 import { api } from "../api.js";
+import { eventItems, pollEvents } from "../components/event-log.js";
 import { bindCard, cardHtml, updateCard } from "../components/model-card.js";
 import { spark, track } from "../components/sparkline.js";
 import { $, esc } from "../dom.js";
@@ -9,12 +10,20 @@ import { seg, state } from "../state.js";
 
 let rendered = false;  // first render done: from then on, don't switch the card shown per kind
 
-const isFav = id => settings.favorites.includes(id);
+export const isFav = id => settings.favorites.includes(id);
+export const favFirst = ids => ids.sort((a, b) => isFav(b) - isFav(a));  // stable: favourites first
+
+// the model becomes (or stops being) a favourite, saved in settings.json
+export async function saveFav(id) {
+  const favorites = isFav(id) ? settings.favorites.filter(f => f !== id) : [...settings.favorites, id];
+  await api("/api/settings", { favorites });
+  settings.favorites = favorites;
+}
 
 export function buildCards(show) {
   const byKind = {};
   for (const [id, m] of Object.entries(state.models)) (byKind[m.kind ??= id] ??= []).push(id);
-  for (const ids of Object.values(byKind)) ids.sort((a, b) => isFav(b) - isFav(a));  // stable: favourites first
+  Object.values(byKind).forEach(favFirst);
   if (!Object.keys(byKind).length) {
     $("#cards").innerHTML = emptyHtml();
     return;
@@ -39,12 +48,10 @@ export function buildCards(show) {
   if (show && state.models[show]) showModel(state.models[show].kind, show);
 }
 
-// star on the kind header: the shown model becomes (or stops being) a favourite, saved in settings.json
+// star on the kind header toggles the shown model
 async function toggleFav(id) {
-  const favorites = isFav(id) ? settings.favorites.filter(f => f !== id) : [...settings.favorites, id];
   try {
-    await api("/api/settings", { favorites });
-    settings.favorites = favorites;
+    await saveFav(id);
     buildCards(id);
     if (state.last) render(state.last);
   } catch (err) { $("#conn").textContent = err.message; }
@@ -97,7 +104,7 @@ function renderSystem(st) {
 
 // WSL: GPU memory reserved by Windows processes (the card is shared with them); over the card's size,
 // Windows pages it out and the machine freezes
-function renderWindowsGpu(g) {
+export function renderWindowsGpu(g) {
   const procs = g.processes || [], el = $("#winGpu");
   el.hidden = !procs.length;
   if (!procs.length) return;
@@ -139,11 +146,19 @@ function render(st) {
   rendered = true;
 }
 
+const EVENTS_SHOWN = 50;
+
+function renderEvents() {
+  $("#eventsList").innerHTML = eventItems(EVENTS_SHOWN) || `<li class="meta">${esc(t("ui.events.empty"))}</li>`;
+  $("#eventsCount").textContent = state.events.length ? `(${state.events.length})` : "";
+}
+
 // the header only says something when the launcher stops answering
 export async function poll() {
   try {
-    const st = await api("/api/status");
+    const [st] = await Promise.all([api("/api/status"), pollEvents()]);
     $("#conn").textContent = "";
+    renderEvents();
     if (st.ready) render(st);
   } catch {
     $("#conn").textContent = t("ui.conn.down");

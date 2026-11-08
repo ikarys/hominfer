@@ -1,0 +1,32 @@
+  <div class="home ck-home">
+    <aside class="ck-models" aria-labelledby="ckModelsTitle">
+      <div class="ck-head"><h3 id="ckModelsTitle">{{t:ui.ck.models}}</h3><a class="btn" href="/models">{{t:ui.nav.models}}</a></div>
+      <ul class="ck-list" id="ckModels"></ul>
+    </aside>
+    <section class="ck-detail" aria-label="{{t:ui.ck.detail}}">
+      <div class="ck-detail-body"><div class="cards" id="cards"></div></div>
+      <div class="ck-bar" id="ckBar">
+        <button type="button" class="primary" data-bar="start">{{t:ui.card.start}}</button>
+        <button type="button" class="danger" data-bar="stop">{{t:ui.card.stop}}</button>
+      </div>
+    </section>
+    <section class="ck-log" aria-labelledby="ckProcTitle">
+      <div class="ck-proc">
+        <div class="ck-head"><h3 id="ckProcTitle"></h3></div>
+        <ul class="ev-list ck-plog" id="ckProcLog" tabindex="0" aria-labelledby="ckProcTitle"></ul>
+      </div>
+      <div class="ck-evs">
+        <div class="ck-head">
+          <h3 id="ckLogTitle">{{t:ui.events.title}}</h3>
+          <div class="ck-filters" id="ckFilters" role="group" aria-label="{{t:ui.ck.filter}}">
+            <button type="button" data-level="" aria-pressed="true">{{t:ui.ck.all}}</button>
+            <button type="button" data-level="run" aria-pressed="false">{{t:ui.ev.level.run}}</button>
+            <button type="button" data-level="warn" aria-pressed="false">{{t:ui.ev.level.warn}}</button>
+            <button type="button" data-level="alarm" aria-pressed="false">{{t:ui.ev.level.alarm}}</button>
+          </div>
+        </div>
+        <div class="win-gpu" id="winGpu" hidden></div>
+        <ol class="ev-list" id="ckEvents"></ol>
+      </div>
+    </section>
+  </div>

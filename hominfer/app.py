@@ -8,6 +8,7 @@ from .infra.wingpu import WindowsGpu
 from .services.catalog import Catalog
 from .services.downloads import Downloads
 from .services.engine_metrics import EngineMetrics
+from .services.events import EventLog
 from .services.hub import HubAdvisor
 from .services.library import Library
 from .services.model_editor import ModelEditor
@@ -28,6 +29,7 @@ class App:
     library: Library
     catalog: Catalog
     hub: HubAdvisor
+    events: EventLog
 
 
 def build():
@@ -35,16 +37,17 @@ def build():
     settings = Settings(config.SETTINGS_FILE, models_busy=lambda: downloads.any_running())
     models_dir = settings.models_dir
     registry = Registry(config.ENGINES_FILE, config.MODELS_FILE, listen_port=config.LISTEN_PORT)
-    updates = Updates(registry, config.LOG_DIR)
+    events = EventLog()
+    updates = Updates(registry, config.LOG_DIR, events)
     win_gpu = WindowsGpu()
     win_gpu.start()
     supervisor = Supervisor(registry, updates, gpu=gpu.query, keep_awake=KeepAwake(), log_dir=config.LOG_DIR,
                             models_dir=models_dir, default_baseline_mib=config.DEFAULT_BASELINE_MIB,
                             gpu_mem=gpu.process_mib, engine_metrics=EngineMetrics(registry),
-                            win_gpu=win_gpu.processes)
+                            win_gpu=win_gpu.processes, events=events)
     downloads = Downloads(models_dir, config.LOG_DIR)
     library = Library(models_dir, registry, downloads)
     catalog = Catalog(config.CATALOG_DIR, registry, config.LOG_DIR, models_dir)
     hub = HubAdvisor(registry, catalog, library, gpu=supervisor.gpu_cached, baseline_mib=supervisor.baseline_mib)
     return App(settings, registry, updates, supervisor, ModelEditor(registry, supervisor), downloads, library,
-               catalog, hub)
+               catalog, hub, events)

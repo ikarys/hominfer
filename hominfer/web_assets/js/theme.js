@@ -1,6 +1,9 @@
-// Themes offered in Settings (the chosen one is applied by index.html before the first paint)
+// Themes and shells offered in Settings (the server renders the chosen ones into the page)
 import { esc } from "./dom.js";
 import { settings, t } from "./i18n.js";
 
-export const themeOptions = selected => settings.themes.map(v =>
-  `<option value="${esc(v)}"${v === selected ? " selected" : ""}>${esc(t("ui.theme." + v))}</option>`).join("");
+const options = (values, selected, prefix) => values.map(v =>
+  `<option value="${esc(v)}"${v === selected ? " selected" : ""}>${esc(t(prefix + v))}</option>`).join("");
+
+export const themeOptions = () => options(settings.themes, settings.theme, "ui.theme.");
+export const shellOptions = () => options(settings.shells, settings.shell, "ui.shell.");

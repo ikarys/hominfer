@@ -1,0 +1,55 @@
+  <div class="manage ck-manage ck-settings">
+    <aside class="ck-set-side">
+      <section>
+        <div class="ck-head"><h3>{{t:ui.ck.m.hf}}</h3></div>
+        <div class="ck-form">
+          <form class="row" id="hfForm">
+            <input id="hfRepo" placeholder="{{t:ui.hf.placeholder}}" required>
+            <button>{{t:ui.hf.browse}}</button>
+          </form>
+          <div class="meta flat" id="hwLine"></div>
+          <div id="dls"></div>
+        </div>
+      </section>
+      <section>
+        <div class="ck-head"><h3>{{t:ui.ck.m.filters}}</h3></div>
+        <div class="ck-form">
+          <fieldset><legend>{{t:ui.col.kind}}</legend><div id="ckFilterKind"></div></fieldset>
+          <fieldset><legend>{{t:ui.col.engine}}</legend><div id="ckFilterEngine"></div></fieldset>
+          <fieldset><legend>{{t:ui.col.state}}</legend><div id="ckFilterState"></div></fieldset>
+          <fieldset><legend>{{t:ui.ck.m.source}}</legend><div id="ckFilterSource"></div></fieldset>
+          <div class="meta flat" id="libFree"></div>
+        </div>
+      </section>
+    </aside>
+
+    <section class="ck-engines" aria-labelledby="ckModelsTitle">
+      <div class="ck-head">
+        <h3 id="ckModelsTitle">{{t:ui.ck.m.title}}</h3>
+        <span class="meta flat" id="ckSummary"></span>
+        <span class="row push">
+          <label>{{t:ui.ck.s.sort}}
+            <select id="ckSort"><option value="az">{{t:ui.ck.s.az}}</option><option value="za">{{t:ui.ck.s.za}}</option>
+              <option value="size">{{t:ui.ck.m.by_size}}</option></select></label>
+          <button id="addModel">{{t:ui.cfg.add}}</button>
+          <button id="reloadCfg" title="{{t:ui.cfg.reload_hint}}">{{t:ui.cfg.reload}}</button>
+        </span>
+      </div>
+      <div class="msg" id="cfgMsg" role="status"></div>
+      <div class="msg" id="libMsg" role="status"></div>
+      <ul class="ck-list" id="ckModelList"></ul>
+      <div hidden><table id="cfgTable"></table><table id="libTable"></table></div>
+    </section>
+
+    <aside class="ck-params">
+      <div id="ckDetailPane">
+        <div class="ck-head"><h3>{{t:ui.ck.m.detail}}</h3></div>
+        <div class="ck-params-body" id="ckDetail"></div>
+      </div>
+      <div id="ckHfPane" hidden>
+        <div class="ck-head"><h3>{{t:ui.ck.m.hf}}</h3>
+          <button type="button" class="push" id="ckHfClose">{{t:ui.ck.m.close}}</button></div>
+        <div class="ck-params-body" id="hfFiles"></div>
+      </div>
+    </aside>
+  </div>

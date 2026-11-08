@@ -11,8 +11,8 @@ Layers whose dependencies point inwards: `web` → `services` → `domain`, with
 | Layer | Role |
 |---|---|
 | `web/` | HTTP: route table (URL → service call), presenters (JSON for the page), page rendering, static files, server (transport, errors) |
-| `services/` | use cases: `supervisor` (start / stop / measure), `registry` (engines.json + models.json), `model_editor`, `library`, `downloads`, `catalog` (engine installs), `updates`, `hub` (Hugging Face verdicts), `settings`, `folders` (folder picker), `jobs` (background jobs) |
-| `domain/` | pure rules: engine command building, model validation, compatibility verdicts, card state and VRAM |
+| `services/` | use cases: `supervisor` (start / stop / measure), `registry` (engines.json + models.json), `model_editor`, `library`, `downloads`, `catalog` (engine installs), `updates`, `events` (in-memory log of what happened, served by `GET /api/events?since=<id>`), `hub` (Hugging Face verdicts), `settings`, `folders` (folder picker), `jobs` (background jobs) |
+| `domain/` | pure rules: engine command building, model validation, compatibility verdicts, card state and VRAM, `events` (what changed between two status snapshots) |
 | `infra/` | system access: GPU (`nvidia-smi`, amdgpu sysfs), processes, network, files, Hugging Face, git, sleep inhibition |
 
 - `app.py` wires the services together (composition root); `__main__.py` starts the server.
@@ -25,17 +25,19 @@ Layers whose dependencies point inwards: `web` → `services` → `domain`, with
 
 | Path | Role |
 |---|---|
-| `index.html` | the shell of every view (header, sections, dialogs), rendered in the UI language by `hominfer/web/page.py` |
-| `css/` | `tokens.css` (colours, light / dark), `themes/` (cyber, pixel, neo), `base`, `dashboard`, `manage` |
+| `index.html` | the head and placeholders; `hominfer/web/page.py` composes the page and renders it in the UI language |
+| `shells/<name>/` | page structure (`shell.html` with `{{VIEWS}}`, `shell.css`, optional `views/<view>.html` overrides and `shell.js`), discovered from the folder |
+| `views/` | `home`, `manage`, `settings` and `dialogs` partials |
+| `css/` | `tokens.css` (colours, fonts, shape), `themes/<name>.css` (discovered), `base`, `dashboard`, `manage` |
 | `js/main.js` | entry point: picks the view, wires the components, reloads on events |
 | `js/views/` | `dashboard` (system panel + cards), `models-table`, `library`, `settings` |
-| `js/components/` | `model-card`, `model-form`, `hf-browser`, `engine-catalog`, `folder-picker`, `sparkline` |
+| `js/components/` | `model-card`, `event-log`, `model-form`, `hf-browser`, `engine-catalog`, `folder-picker`, `sparkline` |
 | `js/*.js` | `api`, `state` (what the page knows), `events` (tiny bus), `i18n` (`t()`), `dom`, `format`, `theme` |
 
 ## Translations
 
 Every text shown to the user comes from `hominfer/locales/<lang>.json`, with the same keys for the page and the
-server: `tr()` in Python, `t()` in JavaScript, `{{t:key}}` in `index.html`. The server renders the page in
+server: `tr()` in Python, `t()` in JavaScript, `{{t:key}}` in the HTML files. The server renders the page in
 the UI language and injects the strings the scripts need.
 
 ## Engine catalog
@@ -48,3 +50,5 @@ script, `catalog/<engine>.sh`: running it again updates or reconfigures. The scr
 
 The page only sends a catalog id: scripts always come from this repository, never from the page. An engine
 id already in `engines.json` is left untouched.
+
+Themes and shells: see [theming.md](theming.md).

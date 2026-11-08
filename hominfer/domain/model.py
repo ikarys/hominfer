@@ -74,7 +74,6 @@ def resolve(mid, c, e, *, vram_mib):
         "port": c["port"], "health": e["health"], "endpoint": e["endpoint"],
         "procs": e["procs"], "match": c.get("file") if e.get("match_file") else None,
         "conflicts": {int(k): v for k, v in c.get("conflicts", {}).items()},
-        "repo": e.get("repo"), "build": e.get("build"), "binary": e.get("binary"),
         "fixed": {k: str(v) for k, v in params.items() if not isinstance(v, list)},
         "vram_mib": vram_mib,
         "options": [{"key": k, "label": e["params"][k]["label"], "choices": labelled(e["params"][k], v),

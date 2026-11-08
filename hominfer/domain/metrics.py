@@ -14,6 +14,7 @@ _PAIR = re.compile(r'\s*(\w+)\s*=\s*"((?:[^"\\]|\\.)*)"\s*(?:,|$)')
 # a label value is quoted: braces and commas inside it do not end the label set
 _LINE = re.compile(rf'({_NAME})(?:\{{((?:[^"}}]|"(?:[^"\\]|\\.)*")*)\}})?\s+(\S+)')
 EXPR = re.compile(rf'{_NAME}(?:\{{\s*\w+="[^"\\]*"\s*(?:,\s*\w+="[^"\\]*"\s*)*\}})?')
+EVENT_TAG = re.compile(r"\w{1,32}")
 _ESC = re.compile(r"\\(.)")
 
 
@@ -62,7 +63,8 @@ def evaluate(show, samples, *, loc=str):
     for item in show:
         v = _value(item, samples)
         if v is not None:
-            out.append({"label": loc(item["label"]), "value": v, "unit": item.get("unit", "count")})
+            out.append({"label": loc(item["label"]), "value": v, "unit": item.get("unit", "count")}
+                       | ({"event": item["event"]} if "event" in item else {}))
     return out
 
 
@@ -77,6 +79,8 @@ def _item_ok(i):
     if not (_label_ok(lab) or isinstance(lab, dict) and lab and all(_label_ok(v) for v in lab.values())):
         return False
     if ("value" in i) == ("ratio" in i) or i.get("unit", "count") not in UNITS:
+        return False
+    if "event" in i and not (isinstance(i["event"], str) and EVENT_TAG.fullmatch(i["event"])):
         return False
     if "value" in i:
         exprs = [i["value"]]

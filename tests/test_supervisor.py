@@ -8,13 +8,13 @@ from hominfer.services import supervisor as sup
 
 
 def make(monkeypatch, tmp_path, probe, gpu=None, gpu_mem=None):
-    models = {f"m{i}": {"port": 9000 + i, "health": "/health", "name": f"m{i}"} for i in range(3)}
+    models = {f"m{i}": {"port": 9000 + i, "health": "/health", "name": f"m{i}", "engine_id": "e"} for i in range(3)}
     registry = SimpleNamespace(models=models, process_patterns=lambda: {})
     me = psutil.Process(os.getpid())
     monkeypatch.setattr(sup.processes, "find", lambda patterns: {mid: [me] for mid in models})
     monkeypatch.setattr(sup.net, "http_ok", probe)
     monkeypatch.setattr(sup.net, "lan_ip", lambda: None)
-    return sup.Supervisor(registry, SimpleNamespace(status=lambda mid: None), gpu=lambda: gpu,
+    return sup.Supervisor(registry, SimpleNamespace(behind=lambda eid: 0), gpu=lambda: gpu,
                           keep_awake=SimpleNamespace(set=lambda on: None), log_dir=tmp_path,
                           models_dir=lambda: tmp_path, default_baseline_mib=0, gpu_mem=gpu_mem)
 

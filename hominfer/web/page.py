@@ -1,16 +1,30 @@
-"""The HTML shell of every view, in the UI language: {{t:key}} replaced by the text (no flash of
-untranslated text), plus the settings and texts the page's JS needs."""
+"""The page, in the UI language: index.html + the chosen shell + the views and dialogs, {{t:key}} replaced by
+the text (no flash of untranslated text), plus the settings and texts the page's JS needs."""
 import html
 import importlib.metadata
 import json
 import re
 import subprocess
+from functools import cache
 
 from .. import config, i18n
-from ..services.settings import THEMES
+from ..infra import web_assets
+from ..services.settings import shell_names, theme_names
 
 VIEWS = ("/", "/index.html", "/models", "/modeles", "/settings")  # /modeles: old address of /models
 _TEXT = re.compile(r"\{\{t:([\w.]+)\}\}")
+_BUILT_IN_THEMES = ("auto", "light", "dark")  # in tokens.css: no stylesheet of their own
+_VIEW_FILES = ("home", "manage", "settings")
+
+
+@cache
+def _read(*parts):
+    """A file of web_assets/, read once."""
+    return config.WEB_DIR.joinpath(*parts).read_text()
+
+
+def _css(url):
+    return f'<link rel="stylesheet" href="{url}">'
 
 
 def _git(args):
@@ -47,12 +61,21 @@ BUILD, BUILD_DATE = _build_info()
 
 def render(settings):
     lang, theme = settings.values["lang"], settings.values["theme"]
-    boot = {"lang": lang, "theme": theme, "models_dir": settings.values["models_dir"], "favorites": settings.values["favorites"], "themes": THEMES,
+    shell = settings.values["shell"]
+    boot = {"lang": lang, "theme": theme, "shell": shell, "themes": theme_names(), "shells": shell_names(),
+            "shell_js": web_assets.shell_script(shell),
+            "models_dir": settings.values["models_dir"], "favorites": settings.values["favorites"],
             "langs": {code: texts.get("lang.name", code) for code, texts in i18n.LOCALES.items()},
             "strings": i18n.LOCALES[i18n.DEFAULT_LANG] | i18n.LOCALES.get(lang, {})}
-    page = (config.WEB_DIR / "index.html").read_text()
+    views = "".join(_read(*web_assets.view_parts(shell, v)) for v in _VIEW_FILES)
+    page = (_read("index.html").replace("{{SHELL}}", _read("shells", shell, "shell.html"))
+            .replace("{{VIEWS}}", views).replace("{{DIALOGS}}", _read("views", "dialogs.html")))
     page = _TEXT.sub(lambda m: html.escape(i18n.tr(m[1])), page)
-    page = (page.replace("{{LANG}}", lang).replace("{{THEME}}", theme)
+    builtin = theme in _BUILT_IN_THEMES
+    page = (page.replace("{{LANG}}", lang)
+            .replace("{{THEME_ATTR}}", "" if theme == "auto" else f' data-theme="{theme}"')
+            .replace("{{THEME_CSS}}", "" if builtin else _css(f"/css/themes/{theme}.css"))
+            .replace("{{SHELL_CSS}}", _css(f"/shells/{shell}/shell.css"))
             .replace("{{BUILD}}", html.escape(BUILD)).replace("{{BUILD_DATE}}", html.escape(BUILD_DATE))
             .replace("{{BOOT}}", json.dumps(boot, ensure_ascii=False).replace("</", "<\\/")))
     return page.encode()

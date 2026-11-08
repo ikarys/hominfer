@@ -36,6 +36,7 @@ def test_models_dir_accepts_home_paths(path):
 @pytest.mark.parametrize("change, message", [
     ({"lang": "xx"}, "Unknown language"),
     ({"theme": "pink"}, "Unknown theme"),
+    ({"shell": "pink"}, "Unknown layout"),
     ({"models_dir": "relative/models"}, "absolute path"),
     ({"models_dir": "  "}, "absolute path"),
     ({"favorites": "qwen"}, "list of model ids"),
@@ -57,7 +58,7 @@ def test_models_dir_cant_move_during_a_download(path, tmp_path):
 
 
 def test_invalid_file_values_fall_back_to_defaults(path):
-    path.write_text(json.dumps({"lang": "xx", "theme": "pink", "models_dir": "relative"}))
+    path.write_text(json.dumps({"lang": "xx", "theme": "pink", "shell": "pink", "models_dir": "relative"}))
     assert Settings(path).values == DEFAULTS | {"favorites": []}
 
 

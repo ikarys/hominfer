@@ -1,180 +1,24 @@
 <!doctype html>
-<!-- Rendered by hominfer/web/page.py: texts (t:<key> in double braces), language, default theme, boot data -->
-<html lang="{{LANG}}" data-default-theme="{{THEME}}">
+<!-- Rendered by hominfer/web/page.py: texts (t:<key> in double braces), language, theme, shell, boot data.
+     The page = this head + shells/<shell>/shell.html (with views/*.html inside) + views/dialogs.html -->
+<html lang="{{LANG}}"{{THEME_ATTR}}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Hominfer</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23367a6b'/><path d='M11 9l13 7-13 7z' fill='white'/></svg>">
-<script>
-// the theme chosen in Settings, before the first paint (no flash)
-(() => {
-  const root = document.documentElement, theme = root.dataset.defaultTheme;
-  if (theme === "light" || theme === "dark") root.dataset.theme = theme;
-  else if (theme !== "auto") root.dataset.skin = theme;
-})();
-</script>
 <script id="boot" type="application/json">{{BOOT}}</script>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&display=swap">
-<!-- order matters: themes override the tokens, and come before the generic rules as they always did -->
+<!-- order matters: the theme overrides the tokens, and comes before the generic rules -->
 <link rel="stylesheet" href="/css/tokens.css">
-<link rel="stylesheet" href="/css/themes/cyber.css">
-<link rel="stylesheet" href="/css/themes/pixel.css">
-<link rel="stylesheet" href="/css/themes/neo.css">
+{{THEME_CSS}}
 <link rel="stylesheet" href="/css/base.css">
 <link rel="stylesheet" href="/css/dashboard.css">
 <link rel="stylesheet" href="/css/manage.css">
+{{SHELL_CSS}}
 <script type="module" src="/js/main.js"></script>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1><a href="/" style="color:inherit;text-decoration:none">Hominfer</a></h1>
-    <span class="build" title="{{BUILD_DATE}}">{{BUILD}}</span>
-    <span class="conn" id="conn"></span>
-    <nav class="nav">
-      <a href="/" data-view="home">{{t:ui.nav.dashboard}}</a>
-      <a href="/models" data-view="manage">{{t:ui.nav.models}}</a>
-      <a href="/settings" data-view="settings">{{t:ui.nav.settings}}</a>
-    </nav>
-  </header>
-
-  <section class="panel sys home">
-    <div>
-      <h3>VRAM <span id="gpuName" style="text-transform:none;letter-spacing:0;font-weight:400"></span></h3>
-      <div class="big" id="vramBig">–</div>
-      <div class="bar" id="vramBar"></div>
-      <div class="legend" id="vramLegend"></div>
-      <div class="win-gpu" id="winGpu" hidden></div>
-    </div>
-    <div>
-      <h3>GPU</h3>
-      <div class="big" id="gpuBig">–</div>
-      <div id="gpuSpark"></div>
-      <div class="meta" id="gpuMeta"></div>
-    </div>
-    <div>
-      <h3>{{t:ui.sys.ram}}</h3>
-      <div class="big" id="ramBig">–</div>
-      <div id="ramSpark"></div>
-      <div class="meta" id="ramMeta">{{t:ui.sys.ram_hint}}</div>
-    </div>
-    <div>
-      <h3>CPU</h3>
-      <div class="big" id="cpuBig">–</div>
-      <div id="cpuSpark"></div>
-      <div class="meta" id="cpuMeta"></div>
-    </div>
-  </section>
-
-  <section class="cards home" id="cards"></section>
-
-  <div class="manage">
-  <section class="panel lib">
-    <div class="lib-head"><h3>{{t:ui.cfg.title}}</h3>
-      <span class="meta" style="margin:0">models.json</span>
-      <span style="margin-left:auto" class="row">
-        <button id="addModel">{{t:ui.cfg.add}}</button>
-        <button class="link" id="reloadCfg" title="{{t:ui.cfg.reload_hint}}">{{t:ui.cfg.reload}}</button>
-      </span>
-    </div>
-    <div class="msg" id="cfgMsg"></div>
-    <div class="table-wrap"><table id="cfgTable"></table></div>
-  </section>
-
-  <section class="panel lib">
-    <div class="lib-head"><h3>{{t:ui.hf.title}}</h3></div>
-    <div class="meta" id="hwLine" style="margin:0"></div>
-    <form class="row" id="hfForm">
-      <input id="hfRepo" placeholder="{{t:ui.hf.placeholder}}" required>
-      <button>{{t:ui.hf.browse}}</button>
-    </form>
-    <div id="hfFiles"></div>
-    <div id="dls"></div>
-    <div class="msg" id="libMsg"></div>
-  </section>
-
-  <section class="panel lib">
-    <div class="lib-head"><h3>{{t:ui.lib.title}}</h3><span class="meta" id="libFree" style="margin:0"></span></div>
-    <div class="table-wrap"><table id="libTable"></table></div>
-  </section>
-  </div>
-
-  <div class="settings">
-  <section class="panel lib">
-    <div class="lib-head"><h3>{{t:ui.set.general}}</h3></div>
-    <div class="opts">
-      <label>{{t:ui.set.lang}}<select id="setLang"></select></label>
-      <label>{{t:ui.set.theme}}<select id="setTheme"></select></label>
-    </div>
-    <form class="row" id="setModelsDir">
-      <label class="field">{{t:ui.set.models_dir}}<input name="models_dir" required></label>
-      <button type="button" id="setBrowse">{{t:ui.set.browse}}</button>
-      <button>{{t:ui.form.save}}</button>
-    </form>
-    <div class="meta" style="margin:0">{{t:ui.set.models_dir_hint}}</div>
-    <div class="msg" id="setMsg"></div>
-    <div class="meta" style="margin:0">{{t:ui.set.hint}}</div>
-  </section>
-
-  <section class="panel lib" id="enginesSec">
-    <div class="lib-head"><h3>{{t:ui.eng.title}}</h3>
-      <span class="meta" style="margin:0">{{t:ui.eng.sub}}</span></div>
-    <div class="msg" id="engMsg"></div>
-    <div class="table-wrap"><table id="engTable"></table></div>
-  </section>
-
-  <section class="panel lib" id="engSettingsSec">
-    <div class="lib-head"><h3>{{t:ui.eng.settings_title}}</h3>
-      <span class="meta" style="margin:0">{{t:ui.eng.settings_sub}}</span></div>
-    <div class="msg" id="engSetMsg" role="status"></div>
-    <div id="engSettings" class="eng-settings"></div>
-  </section>
-  </div>
-</div>
-
-<dialog id="modelDlg">
-  <form id="modelForm">
-    <h2 id="modelTitle">{{t:ui.form.title}}</h2>
-    <div class="form">
-      <label>{{t:ui.form.name}}<input name="name" required></label>
-      <label>{{t:ui.form.id}}<input name="id" pattern="\w+" placeholder="auto" title="{{t:ui.form.id_hint}}"></label>
-      <label>{{t:ui.form.kind}}<select name="kind" id="kindSel"></select></label>
-      <label>{{t:ui.form.engine}}<select name="engine" id="engineSel"></select></label>
-      <label>{{t:ui.form.task}}<input name="task" list="taskList" placeholder="{{t:ui.form.task_ph}}"
-        title="{{t:ui.form.task_hint}}"></label>
-      <label class="wide">{{t:ui.form.desc}}<input name="desc"></label>
-      <label class="wide" id="fileField">{{t:ui.form.file}}<input name="file" list="fileList"
-        placeholder="~/hominfer_models/…"><span class="hint">{{t:ui.form.file_hint}}</span></label>
-      <label>{{t:ui.form.port}}<input name="port" type="number" min="1024" max="65535" required></label>
-      <label>{{t:ui.form.vram}}<span id="vramInfo" style="color:var(--text);padding:6px 0"></span>
-        <span class="hint">{{t:ui.form.vram_hint}}</span></label>
-      <div class="wide hint">{{t:ui.form.params_hint}}</div>
-      <div class="wide form" id="paramFields"></div>
-    </div>
-    <p class="msg" id="modelMsg"></p>
-    <div class="actions" style="margin-top:14px">
-      <button class="primary" value="save">{{t:ui.form.save}}</button>
-      <button type="button" class="link" id="modelCancel">{{t:ui.form.cancel}}</button>
-      <button type="button" class="link" id="modelDelete" style="margin-left:auto;color:var(--err)">{{t:ui.form.delete}}</button>
-    </div>
-  </form>
-</dialog>
-<dialog id="folderDlg">
-  <h2>{{t:ui.folder.title}}</h2>
-  <div class="row" id="folderShortcuts"></div>
-  <div class="row folder-path">
-    <button type="button" class="link" id="folderUp">↑ {{t:ui.folder.up}}</button>
-    <code id="folderPath"></code>
-  </div>
-  <div class="folders" id="folderList"></div>
-  <p class="msg" id="folderMsg"></p>
-  <div class="actions" style="margin-top:14px">
-    <button type="button" class="primary" id="folderChoose">{{t:ui.folder.choose}}</button>
-    <button type="button" class="link" id="folderCancel">{{t:ui.form.cancel}}</button>
-  </div>
-</dialog>
-<datalist id="taskList"></datalist>
-<datalist id="fileList"></datalist>
+{{SHELL}}
+{{DIALOGS}}
 </body>
 </html>

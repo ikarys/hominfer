@@ -21,11 +21,11 @@ def _die_with_launcher():
 
 
 def spawn(argv, log_path, *, env=None, cwd=None, header=""):
-    """Start argv in its own process group, stdout/stderr to log_path (truncated)."""
+    """Start argv in its own process group, stdout/stderr to log_path (truncated, then appended to)."""
     with open(log_path, "w") as log:
         if header:
             log.write(header)
-            log.flush()
+    with open(log_path, "a") as log:
         return _SPAWNER.submit(
             subprocess.Popen, argv, env={**os.environ, **(env or {})}, cwd=cwd, stdin=subprocess.DEVNULL,
             stdout=log, stderr=subprocess.STDOUT, start_new_session=True,

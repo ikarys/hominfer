@@ -32,17 +32,17 @@ def _then_poll(app, result=OK):
     return result
 
 
-def _update(app, mid):
-    if not app.registry.models.get(mid, {}).get("repo"):
+def _update(app, eid):
+    if not app.registry.engines.get(eid, {}).get("repo"):
         raise NotFound
-    app.updates.start(mid)
+    app.updates.start(eid)
     return _then_poll(app)
 
 
-def _check(app, mid):
-    if not app.registry.models.get(mid, {}).get("repo"):
+def _check(app, eid):
+    if not app.registry.engines.get(eid, {}).get("repo"):
         raise NotFound
-    return app.updates.check(mid)
+    return app.updates.check(eid)
 
 
 def _save_model(app, match, body):
@@ -88,6 +88,14 @@ def _engine_params(app, eid, body):
     return OK
 
 
+def _events(app, body):
+    try:
+        since = int(body.get("since", 0))
+    except ValueError:
+        since = 0
+    return app.events.since(since)
+
+
 def _do(action):
     """A handler running action(app) and answering {"ok": true}."""
     def handler(app, match, body):
@@ -98,12 +106,11 @@ def _do(action):
 
 ROUTES = [
     Route("GET", re.compile(r"/api/status"), lambda app, m, b: app.supervisor.snapshot),
+    Route("GET", re.compile(r"/api/events"), lambda app, m, b: _events(app, b)),
     Route("GET", re.compile(r"/api/models"), lambda app, m, b: presenters.models(app)),
     Route("GET", re.compile(r"/api/library"), lambda app, m, b: presenters.library(app)),
     Route("GET", re.compile(r"/api/engines"), lambda app, m, b: presenters.engines(app)),
     Route("GET", re.compile(r"/api/logs/(\w+)"), lambda app, m, b: {"log": app.supervisor.log(_model(app, m[1]))}),
-    Route("POST", re.compile(r"/api/check/(\w+)"), lambda app, m, b: _check(app, m[1])),
-    Route("POST", re.compile(r"/api/update/(\w+)"), lambda app, m, b: _update(app, m[1])),
     Route("POST", re.compile(r"/api/model/(\w+)(/delete)?"), _save_model),
     Route("POST", re.compile(r"/api/profile/(\w+)"), _set_profile),
     Route("POST", re.compile(r"/api/hf/info"), lambda app, m, b: app.hub.check(str(b.get("repo", "")).strip())),
@@ -111,6 +118,8 @@ ROUTES = [
     Route("POST", re.compile(r"/api/hf/cancel/(\d+)"), _do(lambda app, m, b: app.downloads.cancel(int(m[1])))),
     Route("POST", re.compile(r"/api/hf/dismiss/(\d+)"), _do(lambda app, m, b: app.downloads.dismiss(int(m[1])))),
     Route("POST", re.compile(r"/api/engines/([\w.-]+)/params"), lambda app, m, b: _engine_params(app, m[1], b)),
+    Route("POST", re.compile(r"/api/engines/([\w.-]+)/check"), lambda app, m, b: _check(app, m[1])),
+    Route("POST", re.compile(r"/api/engines/([\w.-]+)/update"), lambda app, m, b: _update(app, m[1])),
     Route("POST", re.compile(r"/api/engines/install/([\w.-]+)"), lambda app, m, b: _install(app, m[1])),
     Route("POST", re.compile(r"/api/library/delete"), _do(lambda app, m, b: app.library.delete(str(b.get("path", ""))))),
     Route("POST", re.compile(r"/api/reload"), _do(lambda app, m, b: app.registry.reload_models())),

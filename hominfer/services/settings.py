@@ -1,4 +1,4 @@
-"""User settings (settings.json, local), for every browser: UI language, theme, models folder,
+"""User settings (settings.json, local), for every browser: UI language, theme, shell, models folder,
 favourite models (listed first, shown by default on the dashboard)."""
 import json
 import re
@@ -7,11 +7,21 @@ from pathlib import Path
 from .. import config, i18n
 from ..errors import LaunchError
 from ..i18n import tr
+from ..infra import web_assets
 from ..infra.files import read_json, write_atomic
 
-THEMES = ["auto", "light", "dark", "cyber", "pixel", "neo"]
-DEFAULTS = {"lang": i18n.DEFAULT_LANG, "theme": "auto", "models_dir": config.DEFAULT_MODELS_DIR}
+DEFAULTS = {"lang": i18n.DEFAULT_LANG, "theme": "auto", "shell": "classic", "models_dir": config.DEFAULT_MODELS_DIR}
 MAX_FAVORITES = 200
+
+
+def theme_names():
+    """Every theme the page offers: the built-in ones, then the files of css/themes/."""
+    return ["auto", "light", "dark"] + web_assets.themes()
+
+
+def shell_names():
+    """Every shell the page offers: the folders of shells/."""
+    return web_assets.shells()
 
 
 
@@ -36,7 +46,8 @@ class Settings:
         self.path, self.models_busy = path, models_busy
         s = DEFAULTS | read_json(path, {})
         self.values = {"lang": s["lang"] if s["lang"] in i18n.LOCALES else DEFAULTS["lang"],
-                       "theme": s["theme"] if s["theme"] in THEMES else DEFAULTS["theme"],
+                       "theme": s["theme"] if s["theme"] in theme_names() else DEFAULTS["theme"],
+                       "shell": s["shell"] if s["shell"] in shell_names() else DEFAULTS["shell"],
                        "models_dir": s["models_dir"] if _folder(s["models_dir"]) else DEFAULTS["models_dir"],
                        "favorites": _favorites(s.get("favorites")) or []}
         i18n.set_lang(self.values["lang"])
@@ -55,8 +66,10 @@ class Settings:
                 raise LaunchError(tr("settings.bad_favorites"))
         if new["lang"] not in i18n.LOCALES:
             raise LaunchError(tr("settings.bad_lang"))
-        if new["theme"] not in THEMES:
+        if new["theme"] not in theme_names():
             raise LaunchError(tr("settings.bad_theme"))
+        if new["shell"] not in shell_names():
+            raise LaunchError(tr("settings.bad_shell"))
         if new["models_dir"] != self.values["models_dir"]:
             self._check_models_dir(new["models_dir"])
         write_atomic(self.path, json.dumps(new, indent=2) + "\n")

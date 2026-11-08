@@ -8,7 +8,7 @@ settings.
 |---|---|---|
 | `engines.json` | the engine catalog, or you | how to run each inference engine |
 | `models.json` | the page (Add / Edit a model) | the models: engine, file, port, params, profiles |
-| `settings.json` | the Settings page | UI language, theme, models folder |
+| `settings.json` | the Settings page | UI language, theme, layout, models folder |
 
 ## `engines.json`
 
@@ -34,7 +34,7 @@ weights.
 | `uses` | where those weights land, relative to the models folder (e.g. `hf/models--org--name`) |
 | `metrics` | counters shown on the model card, read from the engine's Prometheus endpoint: `{"path": "/metrics", "show": [item, ...]}` (details below) |
 | `install_hint` | shown when the engine is missing |
-| `repo`, `build`, `binary` | git clone of the engine: enables the "Check for updates" / "Update" buttons (pull + build) |
+| `repo`, `build`, `binary` | git clone of the engine: enables "Check for updates" / "Update" (pull + build) on the engine in Settings |
 
 Placeholders in `command` and `env`: `{port}` `{file}` `{file_name}` `{file_dir}` `{models_dir}`
 `{model_id}`, and every param. An argument or an env variable that ends up empty is dropped, which is
@@ -47,6 +47,7 @@ how optional params work.
 `EXPR` is a metric name with an optional label selector, `name` or `name{k="v",k2="v2"}`: the samples
 having at least those labels are summed. An item without a match (or dividing by zero) is left out.
 `unit`: `count` (default), `bytes`, `pct` (a ratio shown as a percentage) or `x` (2 decimals and `×`).
+`event` (optional): `"preemptions"` marks a counter whose increase is logged in the event log.
 The launcher reads the endpoint for ready models only, at most every 5 seconds.
 
 ## `models.json`
@@ -67,7 +68,7 @@ The models, written by the page. Per model:
 
 ## `settings.json`
 
-Set from the Settings page and shared by every browser: `lang`, `theme`, `models_dir` (default
+Set from the Settings page and shared by every browser: `lang`, `theme`, `shell` (page layout, default `classic`), `models_dir` (default
 `~/hominfer_models`: downloads land there, and engines that fetch their own weights keep them there).
 
 ## Text in several languages
@@ -83,7 +84,7 @@ UI language, falling back to English.
 | `HOMINFER_HOST` | `127.0.0.1` | listen address (`0.0.0.0` = reachable from the LAN; the page has no login) |
 | `HOMINFER_PORT` | `8090` | listen port |
 | `HOMINFER_CONFIG_DIR` | `~/.config/hominfer` | where the three JSON files live |
-| `HOMINFER_LOG_DIR` | `~/.local/state/hominfer/logs` | model, download and install logs |
+| `HOMINFER_LOG_DIR` | `~/.local/state/hominfer/logs` | model, download and install logs (a running model's log is emptied past 50 MiB, the 20 latest download logs are kept) |
 | `HOMINFER_MODELS_DIR` | `~/hominfer_models` | models folder until one is set in Settings |
 | `HOMINFER_ALLOWED_HOSTS` | empty | extra host names the page is opened by (comma-separated), e.g. a local DNS name; IP addresses, `localhost` and the machine's name always work, any other name gets a 403 |
 | `HF_TOKEN` | | Hugging Face token, for gated or private models |

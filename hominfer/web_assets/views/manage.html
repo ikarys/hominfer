@@ -1,0 +1,30 @@
+  <div class="manage">
+  <section class="panel lib">
+    <div class="lib-head"><h3>{{t:ui.cfg.title}}</h3>
+      <span class="meta flat">models.json</span>
+      <span class="row push">
+        <button id="addModel">{{t:ui.cfg.add}}</button>
+        <button class="link" id="reloadCfg" title="{{t:ui.cfg.reload_hint}}">{{t:ui.cfg.reload}}</button>
+      </span>
+    </div>
+    <div class="msg" id="cfgMsg"></div>
+    <div class="table-wrap"><table id="cfgTable"></table></div>
+  </section>
+
+  <section class="panel lib">
+    <div class="lib-head"><h3>{{t:ui.hf.title}}</h3></div>
+    <div class="meta flat" id="hwLine"></div>
+    <form class="row" id="hfForm">
+      <input id="hfRepo" placeholder="{{t:ui.hf.placeholder}}" required>
+      <button>{{t:ui.hf.browse}}</button>
+    </form>
+    <div id="hfFiles"></div>
+    <div id="dls"></div>
+    <div class="msg" id="libMsg"></div>
+  </section>
+
+  <section class="panel lib">
+    <div class="lib-head"><h3>{{t:ui.lib.title}}</h3><span class="meta flat" id="libFree"></span></div>
+    <div class="table-wrap"><table id="libTable"></table></div>
+  </section>
+  </div>

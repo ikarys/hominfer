@@ -90,14 +90,18 @@ async function submit(e) {
   } catch (err) { $("#modelMsg").textContent = err.message; }
 }
 
-async function remove() {
-  if (!confirm(t("ui.form.delete_confirm", { name: state.models[editing].name }))) return;
+// confirm, then remove a model from models.json -> an error message, or null
+export async function deleteModel(id) {
+  if (!confirm(t("ui.form.delete_confirm", { name: state.models[id].name }))) return null;
   try {
-    await api(`/api/model/${editing}/delete`, {});
+    await api(`/api/model/${id}/delete`, {});
     $("#modelDlg").close();
     await emit("reload");
-  } catch (err) { $("#modelMsg").textContent = err.message; }
+    return null;
+  } catch (err) { return err.message; }
 }
+
+async function remove() { $("#modelMsg").textContent = (await deleteModel(editing)) ?? ""; }
 
 export function bindModelForm() {
   $("#engineSel").addEventListener("change", e => paramFields(e.target.value,

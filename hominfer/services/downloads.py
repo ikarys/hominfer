@@ -7,18 +7,20 @@ import time
 from ..errors import LaunchError
 from ..i18n import gib, tr
 from ..infra import huggingface as hf
-from ..infra.files import size_of, tail
+from ..infra.files import prune, size_of, tail
 from .jobs import Jobs
 
 META = ".hominfer_meta.json"  # next to downloaded files: repository, commit, dates
 LEGACY_META = ".ia_meta.json"  # pre-rename
 FREE_MARGIN = 5 * 2**30
+KEEP_LOGS = 20  # download logs kept at startup
 
 
 class Downloads:
     def __init__(self, models_dir, log_dir):
         """models_dir: () -> the models folder (a setting)."""
         self.models_dir, self.log_dir = models_dir, log_dir
+        prune(log_dir, "download-*.log", KEEP_LOGS)
         self.jobs = Jobs()
         self.ids = itertools.count(1)
 

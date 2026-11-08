@@ -25,7 +25,7 @@ Linux / WSL2, NVIDIA or AMD (APUs included).
 - **Engine catalog**: install llama.cpp, vLLM and others from the page when a model needs one, with no
   sudo (the CUDA toolkit comes from NVIDIA's pip wheels; AMD and Intel get a Vulkan build of llama.cpp)
 - **Library**: every model file of your models folder, which model uses it, and cleanup
-- **Settings**: UI language (English, French), theme (auto, light, dark, cyber, pixel, neo), models folder
+- **Settings**: UI language (English, French), theme (auto, light, dark, cyber, pixel, neo), layout, models folder
 - Port conflict detection; the models the launcher started stop with it
 - The machine doesn't go to sleep while a model is loaded (Windows under WSL, systemd-logind on Linux)
 
@@ -37,7 +37,10 @@ Linux / WSL2, NVIDIA or AMD (APUs included).
 
 - Linux or WSL2 (Ubuntu tested), with systemd for the optional boot service
 - An NVIDIA GPU with its driver (`nvidia-smi`), or an AMD GPU on the `amdgpu` driver. The page still works
-  without one, but most engines need it. On AMD only llama.cpp (Vulkan) is offered for now
+  without one, but most engines need it. On AMD only llama.cpp (Vulkan) is offered for now.
+  Several GPUs are untested: the launcher reads only one card (the first on NVIDIA, the one with the most
+  VRAM on AMD), so VRAM figures and the free-VRAM check cover that card alone. An engine's `env` in
+  `engines.json` (e.g. `CUDA_VISIBLE_DEVICES`) can pin it to a card
 - [uv](https://github.com/astral-sh/uv) (installed by the script below if missing)
 - To build engines from the catalog: `sudo apt install git cmake ninja-build build-essential`
 
@@ -72,6 +75,7 @@ From a git checkout instead: `just run` (needs [just](https://github.com/casey/j
 - [How-to guides](docs/how-to.md): install an engine, add a model, profiles, custom engines, languages…
 - [Configuration](docs/configuration.md): `engines.json`, `models.json`, `settings.json`, environment variables
 - [Architecture](docs/architecture.md): how the code is organised
+- [Theming](docs/theming.md): add a theme or a page layout
 - [Contributing](CONTRIBUTING.md)
 
 ## License

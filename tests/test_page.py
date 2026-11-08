@@ -5,11 +5,16 @@ import re
 import pytest
 
 from hominfer import config, i18n
+from hominfer.infra import web_assets
+from hominfer.services.settings import theme_names
 from hominfer.web import page
 
 JS_KEY = re.compile(r"""\bt\(\s*["']([\w.]+)["']""")
 # keys built at run time: prefix + a value the page knows
-DYNAMIC = {"ui.theme.": ["auto", "light", "dark", "cyber", "pixel", "neo"],
+DYNAMIC = {"ui.theme.": theme_names(),
+           "ui.shell.": web_assets.shells(),
+           "ui.ev.level.": ["info", "run", "warn", "alarm"],
+           "ui.ck.state.": ["ok", "warn", "alarm"],
            "ui.state.": ["stopped", "starting", "ready", "stopping", "error"],
            "ui.vram.": ["live", "estimate", "load", "shared", "cpu"],
            "ui.verdict.": ["installed", "gpu", "partial", "no", "incompatible", "install", "disk", "extra"],
@@ -20,12 +25,12 @@ DYNAMIC = {"ui.theme.": ["auto", "light", "dark", "cyber", "pixel", "neo"],
 
 
 class FakeSettings:
-    def __init__(self, lang, theme="cyber"):
-        self.values = {"lang": lang, "theme": theme, "models_dir": "~/hominfer_models", "favorites": []}
+    def __init__(self, lang, theme="cyber", shell="classic"):
+        self.values = {"lang": lang, "theme": theme, "shell": shell, "models_dir": "~/hominfer_models", "favorites": []}
 
 
 def page_literals():
-    html = (config.WEB_DIR / "index.html").read_text()
+    html = "".join(p.read_text() for p in config.WEB_DIR.glob("**/*.html"))
     js = "\n".join(p.read_text() for p in config.WEB_DIR.glob("js/**/*.js"))
     return set(re.findall(r"\{\{t:([\w.]+)\}\}", html)) | set(JS_KEY.findall(js))
 
@@ -46,7 +51,9 @@ def test_render(lang):
     i18n.set_lang(lang)
     html = page.render(FakeSettings(lang)).decode()
     assert "{{" not in html
-    assert f'<html lang="{lang}" data-default-theme="cyber">' in html
+    assert f'<html lang="{lang}" data-theme="cyber">' in html
+    assert 'href="/css/themes/cyber.css"' in html and 'href="/shells/classic/shell.css"' in html
+    assert "themes/pixel.css" not in html and "fonts.googleapis" not in html
     assert i18n.tr("ui.nav.settings") in html
     boot = json.loads(re.search(r'<script id="boot" type="application/json">(.*?)</script>', html, re.S)[1])
-    assert boot["lang"] == lang and "cyber" in boot["themes"] and boot["strings"]["ui.nav.settings"]
+    assert boot["lang"] == lang and "cyber" in boot["themes"] and boot["shell"] == "classic" and "classic" in boot["shells"] and boot["strings"]["ui.nav.settings"]

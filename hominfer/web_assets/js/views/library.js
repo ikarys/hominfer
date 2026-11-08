@@ -32,7 +32,7 @@ function downloadHtml(d) {
   const status = d.state === "running" ? `
     <div class="bar"><span style="width:${Math.min(100, d.done / d.total * 100)}%;background:var(--accent)"></span></div>
     <div class="meta">${size(d.done)} / ${size(d.total)} · <button class="link" data-cancel="${d.id}">${esc(t("ui.dl.cancel"))}</button></div>`
-    : `<div class="meta" style="color:${d.state === "done" ? "var(--ok)" : "var(--err)"}">${
+    : `<div class="meta ${d.state === "done" ? "txt-ok" : "txt-bad"}">${
         esc({ done: t("ui.dl.done"), cancelled: t("ui.dl.cancelled") }[d.state] || d.msg)} · <button class="link" data-dismiss="${d.id}">${
         esc(t("ui.dl.dismiss"))}</button></div>`;
   return `<div class="dl-row"><div><b>${esc(d.repo)}</b> <span class="meta">${esc(d.files.join(", "))}</span></div>${status}</div>`;
@@ -45,7 +45,7 @@ function deleteHtml(path, label, usedBy) {
   if (usedBy?.length) {
     return `<button class="link" disabled title="${esc(t("ui.lib.delete_blocked", { models: usedBy.join(", ") }))}">${esc(t("ui.lib.delete"))}</button>`;
   }
-  return `<button class="link" data-del="${esc(path)}" data-label="${esc(label)}" style="color:var(--err)">${esc(t("ui.lib.delete"))}</button>`;
+  return `<button class="link bad" data-del="${esc(path)}" data-label="${esc(label)}">${esc(t("ui.lib.delete"))}</button>`;
 }
 const useHtml = (x, task) => x.path && engineFor(x.name, state.taskKind[task]) && !x.used_by?.length
   ? `<button class="link" data-use="${esc(x.path)}" data-task="${esc(task || "")}">${esc(t("ui.lib.add_model"))}</button>` : "";
@@ -56,7 +56,7 @@ function itemHtml(it) {
   const head = `<tr>
     <td><b>${esc(it.repo || it.path)}</b> <span class="tag">${esc(t("ui.src." + it.source))}</span>${
       it.task ? ` <span class="tag">${esc(it.task)}</span>` : ""}${
-      it.repo && it.source !== "hf_cache" ? `<div class="meta" style="margin:0">${esc(it.path)}</div>` : ""}</td>
+      it.repo && it.source !== "hf_cache" ? `<div class="meta flat">${esc(it.path)}</div>` : ""}</td>
     <td>${single ? esc(it.files[0].quant || "–") : ""}</td>
     <td>${version}</td>
     <td class="num">${esc(single ? it.files[0].downloaded || it.date : it.date)}</td>
@@ -74,7 +74,7 @@ function render() {
   $("#libFree").textContent = t("ui.lib.free", { dir: lib.dir, size: size(lib.free) });
   if (!$("#hwLine").textContent) $("#hwLine").textContent = hardwareLine(lib.hardware);
   $("#dls").innerHTML = lib.downloads.map(downloadHtml).join("");
-  const head = COLUMNS.map(c => `<th${c === "size" ? ' style="text-align:right"' : ""}>${esc(t("ui.col." + c))}</th>`).join("");
+  const head = COLUMNS.map(c => `<th${c === "size" ? ' class="num"' : ""}>${esc(t("ui.col." + c))}</th>`).join("");
   $("#libTable").innerHTML = `<thead><tr>${head}<th></th></tr></thead><tbody>${lib.items.map(itemHtml).join("")}</tbody>`;
 }
 

@@ -34,6 +34,8 @@ def engines(app):
     gpu = app.supervisor.gpu_cached()
     return {"catalog": app.catalog.status(gpu),
             "configured": {eid: {"label": loc(e["label"]), "installed": app.registry.installed(eid),
+                                 "repo": bool(e.get("repo")),
+                                 "update": {"checked": app.updates.checked.get(eid), "job": app.updates.status(eid)},
                                  "command": " ".join(flat(e["command"])),
                                  "params": [{"key": k, "label": loc(p["label"]), "default": p.get("default", ""),
                                              "values": _choices(p["values"]) if "values" in p else None}

@@ -1,0 +1,40 @@
+  <div class="settings ck-settings">
+    <aside class="ck-set-side">
+      <section>
+        <div class="ck-head"><h3>{{t:ui.set.general}}</h3></div>
+        <div class="ck-form">
+          <label>{{t:ui.set.lang}}<select id="setLang"></select></label>
+          <label>{{t:ui.set.theme}}<select id="setTheme"></select></label>
+          <label>{{t:ui.set.shell}}<select id="setShell"></select></label>
+          <form id="setModelsDir">
+            <label class="field">{{t:ui.set.models_dir}}<input name="models_dir" required></label>
+            <div class="row"><button type="button" id="setBrowse">{{t:ui.set.browse}}</button><button>{{t:ui.form.save}}</button></div>
+          </form>
+          <div class="msg" id="setMsg" role="status"></div>
+        </div>
+      </section>
+      <section>
+        <div class="ck-head"><h3>{{t:ui.ck.s.engines}}</h3></div>
+        <div class="ck-form">
+          <fieldset><legend>{{t:ui.ck.s.status}}</legend><div id="ckFilterStatus"></div></fieldset>
+          <fieldset><legend>{{t:ui.ck.s.type}}</legend><div id="ckFilterType"></div></fieldset>
+        </div>
+      </section>
+    </aside>
+
+    <section class="ck-engines" aria-labelledby="ckEngTitle">
+      <div class="ck-head">
+        <h3 id="ckEngTitle">{{t:ui.ck.s.engines}}</h3>
+        <span class="meta flat" id="ckSummary"></span>
+        <label class="push">{{t:ui.ck.s.sort}}
+          <select id="ckSort"><option value="az">{{t:ui.ck.s.az}}</option><option value="za">{{t:ui.ck.s.za}}</option></select></label>
+      </div>
+      <div class="msg" id="engMsg" role="status"></div>
+      <ul class="ck-list" id="ckEngList"></ul>
+    </section>
+
+    <aside class="ck-params" aria-labelledby="ckParamsTitle">
+      <div class="ck-head"><h3 id="ckParamsTitle">{{t:ui.ck.s.params}}</h3></div>
+      <div class="ck-params-body" id="ckParams"></div>
+    </aside>
+  </div>

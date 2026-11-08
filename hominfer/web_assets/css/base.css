@@ -1,47 +1,45 @@
-/* Page layout, header, form controls, buttons, shared bits */
+/* Page base, form controls, buttons, shared bits (the shell's layout lives in shells/<name>/shell.css) */
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text);
-  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
-.wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
-header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
-h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+  font: 15px/1.45 var(--font-body); }
+h1, h2, .big { font-family: var(--font-display); }
 .sub { color: var(--muted); font-size: 13px; }
-.build { font-size: 12px; color: var(--muted, #888); font-variant-numeric: tabular-nums; }
-.conn { margin-left: auto; font-size: 12px; color: var(--err); }
 
-.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.panel { background: var(--panel); border: var(--border-w) solid var(--line); border-radius: var(--radius); padding: 16px;
+  box-shadow: var(--shadow-panel); }
 .meta { font-size: 12px; color: var(--muted); margin-top: 6px; font-variant-numeric: tabular-nums; }
+/* small helpers, after .meta so they win over its margin */
+.flat { margin: 0; } .mt-2 { margin-top: 2px; } .mt-8 { margin-top: 8px; } .mb-4 { margin-bottom: 4px; } .mb-6 { margin-bottom: 6px; }
+.my-8 { margin-block: 8px; } .push { margin-left: auto; } .num { text-align: right; }
+.mono { font-family: var(--font-mono); }
+.txt-ok { color: var(--ok); } .txt-warn { color: var(--warn); } .txt-bad { color: var(--err); }
 .bar { height: 10px; border-radius: 5px; background: var(--panel-2); overflow: hidden; display: flex; }
 .bar > span { height: 100%; transition: width .4s; }
 
 select, input, textarea { font: inherit; color: var(--text); background: var(--panel);
-  border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; }
+  border: var(--border-w) solid var(--line); border-radius: 7px; padding: 6px 8px; }
 textarea { width: 100%; resize: vertical; font-size: 13px; }
 select:disabled { opacity: .55; }
 
 .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-button { font: inherit; font-size: 14px; font-weight: 600; border-radius: 8px; padding: 7px 16px; cursor: pointer;
-  border: 1px solid var(--line); background: var(--panel); color: var(--text); }
-button.primary { background: var(--ok); color: #fff; border-color: transparent; }
-button.danger { background: var(--err); color: #fff; border-color: transparent; }
+button { font: inherit; font-size: 14px; font-weight: 600; border-radius: var(--radius-sm); padding: 7px 16px; cursor: pointer;
+  border: var(--border-w) solid var(--line); background: var(--panel); color: var(--text); }
+button.primary { background: var(--ok); color: var(--accent-ink); border-color: transparent; }
+button.danger { background: var(--err); color: var(--accent-ink); border-color: transparent; }
 button:disabled { opacity: .45; cursor: default; }
 button.primary:disabled, button.danger:disabled { background: var(--panel-2); color: var(--faint); border-color: var(--line); }
 button.link { border: none; background: none; padding: 7px 4px; font-weight: 500; color: var(--muted); }
+button.link.bad { color: var(--err); }
 .msg { font-size: 13px; color: var(--err); }
 .msg:empty { display: none; }
-pre.log { margin: 0; max-height: 280px; overflow: auto; font: 11.5px/1.45 var(--mono); background: var(--panel-2);
-  border-radius: 8px; padding: 10px; white-space: pre-wrap; word-break: break-word; }
+pre.log { margin: 0; max-height: 280px; overflow: auto; font: 11.5px/1.45 var(--font-mono); background: var(--panel-2);
+  border-radius: var(--radius-sm); padding: 10px; white-space: pre-wrap; word-break: break-word; }
 
 .toolbar { display: flex; gap: 8px; align-items: center; margin: 0 0 12px; }
-a.btn { font-size: 14px; font-weight: 600; border-radius: 8px; padding: 7px 16px; text-decoration: none;
-  border: 1px solid var(--line); background: var(--panel); color: var(--text); }
+a.btn { font-size: 14px; font-weight: 600; border-radius: var(--radius-sm); padding: 7px 16px; text-decoration: none;
+  border: var(--border-w) solid var(--line); background: var(--panel); color: var(--text); }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .row input { flex: 1; min-width: 200px; }
-
-.nav { display: flex; gap: 4px; }
-.nav a { font-size: 13px; font-weight: 600; color: var(--muted); text-decoration: none; padding: 4px 10px; border-radius: 7px; }
-.nav a:hover { color: var(--text); }
-.nav a.on { color: var(--text); background: var(--panel-2); }
 
 /* one page, several views: body.page-<view> shows only its own sections */
 body:not(.page-home) .home, body:not(.page-manage) .manage, body:not(.page-settings) .settings { display: none; }
