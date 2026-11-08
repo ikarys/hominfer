@@ -6,7 +6,7 @@
 .ck h3 { margin: 0; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 .ck .build { font-size: 11px; color: var(--muted); }
 .ck-main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.ck-main > .manage { padding: 16px; max-width: 1200px; width: 100%; margin: 0 auto; overflow: auto; }
+.ck-main > .manage, .ck-main > .stats { padding: 16px; max-width: 1200px; width: 100%; margin: 0 auto; overflow: auto; }
 
 /* band */
 .ck-band { display: flex; align-items: center; gap: 12px 24px; flex-wrap: wrap; padding: 8px 16px;
@@ -160,7 +160,7 @@ body.page-home .ck-mini { display: none; }
 }
 @media (min-width: 901px) {
   .ck { height: 100vh; }
-  .ck-main > .manage { flex: 1; }
+  .ck-main > .manage, .ck-main > .stats { flex: 1; }
 }
 @media (max-width: 900px) {
   .ck-home, .ck-settings { display: block; overflow: visible; }
