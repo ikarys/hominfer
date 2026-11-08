@@ -12,7 +12,7 @@ if [ -d "$INSTALL_DIR/.git" ] && git -C "$INSTALL_DIR" remote get-url origin | g
   step "Switching $INSTALL_DIR to upstream"
   git -C "$INSTALL_DIR" remote set-url origin https://github.com/Neroued/ninfer.git
   git -C "$INSTALL_DIR" fetch --depth 1 origin master
-  git -C "$INSTALL_DIR" checkout -B master FETCH_HEAD
+  git -C "$INSTALL_DIR" checkout -B master --track origin/master
 fi
 git_checkout https://github.com/Neroued/ninfer.git "$INSTALL_DIR"
 cd "$INSTALL_DIR"
