@@ -225,6 +225,9 @@
   "ui.eng.confirm_configure": "Configurer {label} (déjà présent dans {dir}) ?",
   "ui.eng.confirm_update": "Mettre à jour {label} ({dir}) ? Les modèles lancés ne sont pas touchés.",
   "ui.eng.follow": "Installation lancée : suis-la dans les Réglages.",
+  "ui.eng.missing": "Manquant : {names}",
+  "ui.eng.missing_hint": "À lancer dans un terminal, puis recharger cette page :",
+  "ui.eng.docs": "Guide d'installation",
 
   "ui.hf.title": "Télécharger depuis Hugging Face",
   "ui.hf.placeholder": "Dépôt Hugging Face : organisation/nom (ex. prism-ml/Ternary-Bonsai-2-27B-gguf)",
@@ -391,6 +394,7 @@
   "eng.unknown": "Moteur inconnu du catalogue.",
   "eng.min_cc": "Demande un GPU de génération {cc}+, le tien est en {gpu_cc}.",
   "eng.gpu_vendor": "Nécessite un GPU {vendors}.",
+  "eng.missing": "Prérequis manquants : {names}.",
   "eng.running": "Installation déjà en cours.",
   "eng.installing": "Installation dans {dir}…",
   "eng.failed": "Échec (code {code}) : voir le log.",

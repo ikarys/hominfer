@@ -35,3 +35,33 @@ def test_recipes_follow_the_gpu_vendor(tmp_path):
     assert not cat.compat("ninfer", nvidia)[0]  # min_cc 12.0
     assert cat.suggest("gguf", "llm", "org/repo", nvidia)["id"] == "llama.cpp"
     assert cat.suggest("gguf", "llm", "org/repo", amd)["id"] == "llama.cpp-vulkan"
+
+
+def test_requirements_are_defined():
+    reqs = json.loads((config.CATALOG_DIR / "requirements.json").read_text())
+    allreqs = {**reqs["tools"], **reqs["libraries"]}
+    for c in CATALOG.values():
+        assert set(c.get("requires", [])) <= set(allreqs)
+    for r in allreqs.values():
+        assert ("cmd" in r) != ("pkgconfig" in r) and ("apt" in r or "install" in r)
+
+
+def test_missing_prerequisites_block_the_install(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    from hominfer.errors import LaunchError
+    from hominfer.infra import prereqs
+    from hominfer.services.catalog import Catalog
+    registry = SimpleNamespace(engines={}, installed=lambda cid: False)
+    cat = Catalog(config.CATALOG_DIR, registry, tmp_path, lambda: tmp_path)
+    monkeypatch.setattr(prereqs, "present", lambda req: req.get("cmd") != "ninja")
+    nv = {"vendor": "nvidia", "cc": 8.6}
+    assert cat.missing("llama.cpp") == ["ninja"] and cat.missing("vllm") == []
+    s = {e["id"]: e for e in cat.status(nv)}["llama.cpp"]
+    assert s["missing"] == ["ninja"] and s["fix"] == ["sudo apt install -y ninja-build"]
+    with pytest.raises(LaunchError, match="ninja"):
+        cat.install("llama.cpp", nv)
+
+
+def test_docs_links_are_https():
+    assert all(c["docs"].startswith("https://") for c in CATALOG.values() if "docs" in c)

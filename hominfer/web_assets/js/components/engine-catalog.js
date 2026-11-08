@@ -27,17 +27,29 @@ export async function loadEngines() {
 function actionHtml(c) {
   if (!c.compatible) return `<span class="meta flat">${esc(c.why)}</span>`;
   if (c.job?.state === "running") return `<span class="meta flat">${esc(t("ui.eng.installing"))}</span>`;
+  if (c.missing.length) return `<span class="meta flat txt-bad">${esc(t("ui.eng.missing", { names: c.missing.join(", ") }))}</span>`;
   const label = c.state === "configured" ? t("ui.eng.update") : c.state === "present" ? t("ui.eng.configure")
     : t("ui.eng.install", { disk: c.disk_gb, min: c.minutes });
   return `<button class="${c.state === "available" ? "primary" : "link"}" data-install="${esc(c.id)}">${esc(label)}</button>`;
 }
 
-function jobHtml(job) {
+const docsHtml = c => c.docs
+  ? `<a class="meta" href="${esc(c.docs)}" target="_blank" rel="noopener">${esc(t("ui.eng.docs"))}</a>` : "";
+
+function jobHtml(c) {
+  const job = c.job;
   if (!job) return "";
   const color = { done: "txt-ok", error: "txt-bad" }[job.state] || "";
   return `<tr class="sub"><td colspan="4">
     <div class="meta flat mb-4 ${color}">${esc(job.msg)}</div>
-    <pre class="log">${esc(job.log)}</pre></td></tr>`;
+    <pre class="log">${esc(job.log)}</pre>${job.state === "error" ? docsHtml(c) : ""}</td></tr>`;
+}
+
+function missingHtml(c) {
+  if (!c.compatible || !c.missing.length) return "";
+  return `<tr class="sub"><td colspan="4">
+    <div class="meta flat mb-4">${esc(t("ui.eng.missing_hint"))}</div>
+    <pre class="log">${esc(c.fix.join("\n"))}</pre>${docsHtml(c)}</td></tr>`;
 }
 
 function render() {
@@ -52,7 +64,7 @@ function render() {
           <div class="meta flat mt-2 mono">${esc(c.dir)}</div></td>
         <td>${runs.map(x => `<span class="tag">${esc(x)}</span>`).join(" ")}</td>
         <td><span class="verdict v-${STATE_CLASS[c.state]}">${esc(t("ui.eng.state." + c.state))}</span></td>
-        <td>${actionHtml(c)}</td></tr>${jobHtml(c.job)}`;
+        <td>${actionHtml(c)}</td></tr>${missingHtml(c)}${jobHtml(c)}`;
     }).join("")}</tbody>`;
   document.querySelectorAll("#engTable pre.log").forEach(p => p.scrollTop = p.scrollHeight);
 }

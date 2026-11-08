@@ -1,0 +1,21 @@
+{
+  "tools": {
+    "git": {"cmd": "git", "apt": "git"},
+    "cmake": {"cmd": "cmake", "apt": "cmake"},
+    "ninja": {"cmd": "ninja", "apt": "ninja-build"},
+    "g++": {"cmd": "g++", "apt": "build-essential"},
+    "pkg-config": {"cmd": "pkg-config", "apt": "pkg-config"},
+    "glslc": {"cmd": "glslc", "apt": "glslc"},
+    "uv": {"cmd": "uv", "install": "curl -LsSf https://astral.sh/uv/install.sh | sh"}
+  },
+  "libraries": {
+    "hwloc": {"pkgconfig": "hwloc", "apt": "libhwloc-dev"},
+    "liburing": {"pkgconfig": "liburing", "apt": "liburing-dev"},
+    "libjpeg": {"pkgconfig": "libjpeg", "apt": "libjpeg-dev"},
+    "libavformat": {"pkgconfig": "libavformat", "apt": "libavformat-dev"},
+    "libavcodec": {"pkgconfig": "libavcodec", "apt": "libavcodec-dev"},
+    "libavutil": {"pkgconfig": "libavutil", "apt": "libavutil-dev"},
+    "libswscale": {"pkgconfig": "libswscale", "apt": "libswscale-dev"},
+    "libcurl": {"pkgconfig": "libcurl", "apt": "libcurl4-openssl-dev"}
+  }
+}

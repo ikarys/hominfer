@@ -10,6 +10,7 @@
     "script": "llama.cpp.sh",
     "disk_gb": 3,
     "minutes": 15,
+    "requires": ["git", "cmake", "ninja", "g++", "uv"],
     "gpu": ["nvidia"],
     "engine": {
       "label": "llama.cpp",
@@ -46,6 +47,7 @@
     "script": "llama.cpp-vulkan.sh",
     "disk_gb": 3,
     "minutes": 10,
+    "requires": ["git", "cmake", "ninja", "g++", "glslc"],
     "engine": {
       "label": "llama.cpp (Vulkan)",
       "kinds": ["llm"],
@@ -82,6 +84,7 @@
     "script": "vllm.sh",
     "disk_gb": 12,
     "minutes": 10,
+    "requires": ["uv"],
     "gpu": ["nvidia"],
     "engine": {
       "label": "vLLM",
@@ -115,6 +118,7 @@
     "script": "vllm-omni.sh",
     "disk_gb": 12,
     "minutes": 15,
+    "requires": ["uv"],
     "gpu": ["nvidia"],
     "engine": {
       "label": "vLLM-Omni",
@@ -140,6 +144,9 @@
     "script": "ninfer.sh",
     "disk_gb": 2,
     "minutes": 20,
+    "requires": ["git", "cmake", "ninja", "g++", "uv", "pkg-config", "hwloc", "liburing",
+                 "libjpeg", "libavformat", "libavcodec", "libavutil", "libswscale", "libcurl"],
+    "docs": "https://github.com/Neroued/ninfer#build",
     "gpu": ["nvidia"],
     "min_cc": 12.0,
     "engine": {
@@ -205,6 +212,7 @@
     "script": "laya.sh",
     "disk_gb": 8,
     "minutes": 5,
+    "requires": ["uv"],
     "engine": {
       "label": "laya-serve",
       "kinds": ["decision"],

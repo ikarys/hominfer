@@ -8,8 +8,10 @@ import json
 from pathlib import Path
 
 from ..domain.engine import expand
+from ..domain.prereqs import fix_commands
 from ..errors import LaunchError
 from ..i18n import loc, tr
+from ..infra import prereqs
 from ..infra.engine_files import is_installed
 from .jobs import Jobs
 
@@ -19,6 +21,8 @@ class Catalog:
         """models_dir: () -> the models folder (engines fetching their own weights put them there)."""
         self.dir, self.registry, self.log_dir, self.models_dir = catalog_dir, registry, log_dir, models_dir
         self.entries = json.loads((catalog_dir / "catalog.json").read_text())
+        reqs = json.loads((catalog_dir / "requirements.json").read_text())
+        self.reqs = {**reqs["tools"], **reqs["libraries"]}
         self.jobs = Jobs()
 
     def state(self, cid):
@@ -38,6 +42,9 @@ class Catalog:
             return False, tr("eng.min_cc", cc=c["min_cc"], gpu_cc=cc)
         return True, ""
 
+    def missing(self, cid):
+        return [n for n in self.entries[cid].get("requires", []) if not prereqs.present(self.reqs[n])]
+
     def suggest(self, fmt, kind, repo, gpu):
         """Catalog engine that would run this model, if it isn't set up yet."""
         for cid, c in self.entries.items():
@@ -55,6 +62,8 @@ class Catalog:
         ok, why = self.compat(cid, gpu)
         if not ok:
             raise LaunchError(why)
+        if names := self.missing(cid):
+            raise LaunchError(tr("eng.missing", names=", ".join(names)))
         c = self.entries[cid]
 
         def work(job):
@@ -75,9 +84,11 @@ class Catalog:
         for cid, c in self.entries.items():
             e, job = c["engine"], self.jobs.get(cid)
             ok, why = self.compat(cid, gpu)
-            out.append({"id": cid, "label": loc(c["label"]), "desc": loc(c["desc"]), "url": c["url"],
+            names = self.missing(cid)
+            out.append({"id": cid, "label": loc(c["label"]), "desc": loc(c["desc"]), "url": c["url"], "docs": c.get("docs"),
                         "dir": c["dir"], "disk_gb": c["disk_gb"], "minutes": c["minutes"],
                         "kinds": e.get("kinds", []), "file_ext": e.get("file_ext", []),
                         "state": self.state(cid), "compatible": ok, "why": why,
+                        "missing": names, "fix": fix_commands([self.reqs[n] for n in names]),
                         "job": job and job.view(log_lines=40)})
         return out

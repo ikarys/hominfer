@@ -21,7 +21,16 @@ need() {
   for c in "$@"; do command -v "$c" >/dev/null || missing+=("$c"); done
   if [ ${#missing[@]} -gt 0 ]; then
     echo "Missing tools: ${missing[*]}"
-    echo "Install them with: sudo apt install ${missing[*]/g++/build-essential}"
+    local pkgs=() c
+    for c in "${missing[@]}"; do
+      case "$c" in
+        uv) echo "Install uv: curl -LsSf https://astral.sh/uv/install.sh | sh" ;;
+        g++) pkgs+=(build-essential) ;;
+        ninja) pkgs+=(ninja-build) ;;
+        *) pkgs+=("$c") ;;
+      esac
+    done
+    [ ${#pkgs[@]} -eq 0 ] || echo "Install them with: sudo apt install ${pkgs[*]}"
     exit 1
   fi
 }

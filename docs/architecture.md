@@ -48,6 +48,10 @@ script, `catalog/<engine>.sh`: running it again updates or reconfigures. The scr
 `hominfer/catalog/lib.sh` (CUDA toolkit from pip wheels, GPU architecture, git checkout) and receive
 `INSTALL_DIR`, `MODELS_DIR` and `GPU_CC` in their environment.
 
+Each entry lists the prerequisites it needs in `requires`; they are defined once in `catalog/requirements.json`
+(tool or pkg-config library, with its apt package or install command). The page shows what is missing, with the
+commands to run, and the install is refused until nothing is missing.
+
 The page only sends a catalog id: scripts always come from this repository, never from the page. An engine
 id already in `engines.json` is left untouched.
 

@@ -225,6 +225,9 @@
   "ui.eng.confirm_configure": "Configure {label} (already present in {dir})?",
   "ui.eng.confirm_update": "Update {label} ({dir})? Running models are not touched.",
   "ui.eng.follow": "Installation started: follow it in Settings.",
+  "ui.eng.missing": "Missing: {names}",
+  "ui.eng.missing_hint": "Run in a terminal, then reload this page:",
+  "ui.eng.docs": "Install guide",
 
   "ui.hf.title": "Download from Hugging Face",
   "ui.hf.placeholder": "Hugging Face repository: organization/name (e.g. prism-ml/Ternary-Bonsai-2-27B-gguf)",
@@ -391,6 +394,7 @@
   "eng.unknown": "Engine not in the catalog.",
   "eng.min_cc": "Needs a GPU of generation {cc}+, yours is {gpu_cc}.",
   "eng.gpu_vendor": "Needs an {vendors} GPU.",
+  "eng.missing": "Missing prerequisites: {names}.",
   "eng.running": "Installation already running.",
   "eng.installing": "Installing in {dir}…",
   "eng.failed": "Failed (code {code}): see the log.",
