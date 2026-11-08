@@ -51,9 +51,9 @@ themes:
 
 | Dark | Light |
 |---|---|
-| ![Dark theme](docs/images/theme-dark.png) | ![Light theme](docs/images/theme-light.png) |
+| ![Dark theme](docs/images/theme-dark-cockpit.png) | ![Light theme](docs/images/theme-light-cockpit.png) |
 | **Pixel** | **Neo** |
-| ![Pixel theme](docs/images/theme-pixel.png) | ![Neo theme](docs/images/theme-neo.png) |
+| ![Pixel theme](docs/images/theme-pixel-cockpit.png) | ![Neo theme](docs/images/theme-neo-cockpit.png) |
 
 Pick them in **Settings**; [docs/theming.md](docs/theming.md) explains how to add your own.
 
