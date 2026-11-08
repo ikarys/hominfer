@@ -24,14 +24,38 @@ Linux / WSL2, NVIDIA or AMD (APUs included).
   based on your GPU, your installed engines and free disk, then download what fits
 - **Engine catalog**: install llama.cpp, vLLM and others from the page when a model needs one, with no
   sudo (the CUDA toolkit comes from NVIDIA's pip wheels; AMD and Intel get a Vulkan build of llama.cpp)
+- **Engine metrics**: running / waiting requests, prefix cache reuse, KV cache, and how many sessions a
+  model really serves at once, for engines that expose them
+- **Stats**: usage history per model and per engine (up time, busy time, peak and concurrent sessions)
+  over the last 24 hours, 7, 30 or 90 days, or any date range
+- **Logs and events**: live engine log, the exact command line, extra arguments, and an event log
+  (starts, crashes, warnings)
+- **Auto-restart**: an engine that dies or stops answering after being ready is restarted
 - **Library**: every model file of your models folder, which model uses it, and cleanup
-- **Settings**: UI language (English, French), theme (auto, light, dark, cyber, pixel, neo), layout, models folder
-- Port conflict detection; the models the launcher started stop with it
+- **Themes and layouts**: six themes (auto, light, dark, cyber, pixel, neo) and two layouts: *classic*
+  (one scrolling page) and *cockpit* (dense multi-pane console); UI in English or French
+- Port conflict detection; missing engine prerequisites are listed before installing; the models the
+  launcher started stop with it
 - The machine doesn't go to sleep while a model is loaded (Windows under WSL, systemd-logind on Linux)
 
-| Models | Settings |
+| Models | Stats |
 |---|---|
-| ![Models](docs/images/models.png) | ![Settings](docs/images/settings.png) |
+| ![Models](docs/images/models.png) | ![Stats](docs/images/stats.png) |
+| **Settings** | **Stats (classic layout, light theme)** |
+| ![Settings](docs/images/settings.png) | ![Stats, classic layout](docs/images/stats-classic.png) |
+
+### Themes
+
+The screenshots above use the *cockpit* layout with the *cyber* theme. The same dashboard in the
+*classic* layout:
+
+| Dark | Light |
+|---|---|
+| ![Dark theme](docs/images/theme-dark.png) | ![Light theme](docs/images/theme-light.png) |
+| **Pixel** | **Neo** |
+| ![Pixel theme](docs/images/theme-pixel.png) | ![Neo theme](docs/images/theme-neo.png) |
+
+Pick them in **Settings**; [docs/theming.md](docs/theming.md) explains how to add your own.
 
 ## Requirements
 
