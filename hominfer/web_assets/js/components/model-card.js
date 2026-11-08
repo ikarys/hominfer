@@ -9,6 +9,9 @@ import { openModelForm } from "./model-form.js";
 import { fill, spark, track } from "./sparkline.js";
 
 const openLogs = new Set();
+const openCmds = new Set();
+const previewCache = new Map();
+const lastRunning = new Map();
 
 export function cardHtml(id, m, hidden) {
   return `
@@ -39,10 +42,12 @@ export function cardHtml(id, m, hidden) {
         <button class="primary" data-act="start">${esc(t("ui.card.start"))}</button>
         <button class="danger" data-act="stop">${esc(t("ui.card.stop"))}</button>
         <button class="link" data-act="logs">${esc(t("ui.card.logs"))}</button>
+        <button class="link" data-act="cmd">${esc(t("ui.card.command"))}</button>
         <button class="link" data-act="edit">${esc(t("ui.card.edit"))}</button>
       </div>
       <div class="msg" data-k="msg"></div>
       <pre class="log" data-k="log" hidden></pre>
+      <pre class="log cmd" data-k="cmd"${openCmds.has(id) ? "" : " hidden"}></pre>
     </article>`;
 }
 
@@ -78,10 +83,12 @@ const chosenOptions = card => Object.fromEntries(
 
 export function bindCard(id) {
   const card = $("#card-" + id), m = state.models[id];
+  previewCache.delete(id);  // rebuilt after an edit: extra_args may have changed
   applyProfile(card, Object.values(m.profiles)[0]);
   card.addEventListener("change", e => {
     if (e.target.matches("[data-profile]")) applyProfile(card, m.profiles[e.target.value]);
     else if (e.target.matches("[data-opt]")) syncProfile(card, m);
+    if (openCmds.has(id)) refreshCmd(id);
   });
   card.addEventListener("click", async e => {
     const act = e.target.closest("button")?.dataset.act;
@@ -114,6 +121,12 @@ function toggleLogs(id, card) {
   if (openLogs.has(id)) refreshLog(id);
 }
 
+function toggleCmd(id, card) {
+  openCmds.has(id) ? openCmds.delete(id) : openCmds.add(id);
+  $("[data-k=cmd]", card).hidden = !openCmds.has(id);
+  if (openCmds.has(id)) { previewCache.delete(id); refreshCmd(id); }
+}
+
 async function startStop(id, card, button, act) {
   if (act === "stop" && !confirm(t("ui.card.stop_confirm", { name: state.models[id].name }))) return;
   button.disabled = true;
@@ -142,6 +155,7 @@ const ACTIONS = {
   saveprof: saveOrDeleteProfile,
   delprof: saveOrDeleteProfile,
   logs: toggleLogs,
+  cmd: toggleCmd,
   copy: copyUrl,
 };
 
@@ -153,6 +167,41 @@ async function refreshLog(id) {
   const s = state.last?.models[id];
   pre.textContent = log || t(s?.managed === false && s?.pids.length ? "ui.card.external_logs" : "ui.card.no_logs");
   if (atBottom) pre.scrollTop = pre.scrollHeight;
+}
+
+function envBlock(env) {
+  const entries = Object.entries(env || {});
+  return entries.length ? "\n\n" + t("ui.card.cmd_env") + "\n" + entries.map(([k, v]) => `${k}=${v}`).join("\n") : "";
+}
+
+async function refreshCmd(id) {
+  const card = $("#card-" + id);
+  const pre = $("[data-k=cmd]", card);
+  if (!pre) return;
+  const s = state.last?.models[id];
+  const running = !!s?.cmdlines?.length;
+  let text;
+  if (running) {
+    text = t("ui.card.cmd_running") + "\n" + s.cmdlines.map(c => "$ " + c).join("\n") + envBlock(s.env);
+  } else {
+    const opts = chosenOptions(card);
+    const optsJson = JSON.stringify(opts);
+    const cache = previewCache.get(id);
+    const force = !cache || cache.opts !== optsJson || lastRunning.get(id) === true;
+    if (force) {
+      try {
+        const { argv, env } = await api(`/api/command/${id}`, opts);
+        text = t("ui.card.cmd_preview") + "\n$ " + argv + envBlock(env);
+      } catch (err) {
+        text = err.message;
+      }
+      previewCache.set(id, { opts: optsJson, text });
+    } else {
+      text = cache.text;
+    }
+  }
+  lastRunning.set(id, running);
+  if (pre.textContent !== text) pre.textContent = text;
 }
 
 // refresh a card from /api/status (st) for its model (s)
@@ -186,6 +235,7 @@ export function updateCard(id, s, st) {
   $("[data-act=stop]", card).disabled = !running || s.state === "stopping";
   if (s.error) $("[data-k=msg]", card).textContent = s.error;
   if (openLogs.has(id)) refreshLog(id);
+  if (openCmds.has(id)) refreshCmd(id);
 }
 
 function updateMetrics(id, card, s, st, running) {

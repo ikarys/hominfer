@@ -18,6 +18,30 @@ BUILTIN_VARS = {"port", "file", "file_name", "file_dir", "models_dir", "model_id
 WORD = re.compile(r"\w+")
 # a model uses its "auto" device on GPU only if this much VRAM stays free on top of its own
 AUTO_DEVICE_MARGIN_MIB = 1536
+SECRET = re.compile(r"(?:^|[-_])(?:key|token|secret|password|passwd)$", re.I)  # --api-key, HF_TOKEN; not --draft-tokens
+
+
+def redact(argv, env=None):
+    """Copy argv/env with secret values replaced by '***'."""
+    out = []
+    skip_next = False
+    for a in argv:
+        if skip_next:
+            out.append("***")
+            skip_next = False
+            continue
+        if isinstance(a, str) and a.startswith("-"):
+            prefix, sep, _ = a.partition("=")
+            if SECRET.search(prefix.lstrip("-")):
+                if sep:
+                    out.append(prefix + "=***")
+                else:
+                    out.append(a)
+                    skip_next = True
+                continue
+        out.append(a)
+    env = dict(env) if env else {}
+    return out, {k: ("***" if SECRET.search(k) else v) for k, v in env.items()}
 
 
 def expand(s):

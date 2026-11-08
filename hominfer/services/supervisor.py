@@ -164,6 +164,8 @@ class Supervisor:
             "cpu_machine_pct": round(cpu / ncpu, 1) if ps else None,
             "uptime_s": round(time.time() - started) if started else None,
             "opts": run["opts"] if run else None,
+            "cmdlines": self._cmdlines(ps, m.get("procs", [])),
+            "env": run["env"] if run else None,
             "engine_behind": self.updates.behind(m["engine_id"]),
         }
 
@@ -199,7 +201,33 @@ class Supervisor:
                 pass
         return rss, cpu, started
 
+    def _cmdlines(self, ps, procs):
+        """Redacted command lines of the engine's own processes (workers are skipped)."""
+        out = []
+        wanted = set(procs or [])
+        for p in ps:
+            try:
+                cmdline = p.cmdline()
+            except psutil.Error:
+                continue
+            if not cmdline:
+                continue
+            names = {os.path.basename(cmdline[0])}
+            if len(cmdline) > 1:
+                names.add(os.path.basename(cmdline[1]))
+            if not names & wanted:
+                continue
+            argv, _ = engine_rules.redact(cmdline)
+            out.append(shlex.join(argv))
+        return out
+
     # -- actions
+    def _command(self, mid, clean, free):
+        m = self.registry.models[mid]
+        return engine_rules.build_command(
+            self.registry.engines[m["engine_id"]], mid, m["config"], m["fixed"] | clean,
+            vram_need=m["vram_mib"], free_vram=free, models_dir=self.models_dir())
+
     def start(self, mid, opts):
         m = self.registry.models[mid]
         with self.lock:
@@ -213,16 +241,29 @@ class Supervisor:
             clean = clean_options(m, opts)
             gpu = self.gpu()
             free = gpu["total"] - gpu["used"] if gpu else 0
-            argv, env, need = engine_rules.build_command(
-                self.registry.engines[m["engine_id"]], mid, m["config"], m["fixed"] | clean,
-                vram_need=m["vram_mib"], free_vram=free, models_dir=self.models_dir())
+            argv, env, need = self._command(mid, clean, free)
             if gpu and need and free < need:
                 self._refuse_no_vram(mid, free, need)
             header = f"$ {' '.join(argv)}\n  {' '.join(f'{k}={v}' for k, v in env.items())}\n\n"
             popen = processes.spawn(argv, self.log_dir / f"{mid}.log", env=env, header=header)
-            self.runs[mid] = {"popen": popen, "opts": clean, "vram_before": gpu and gpu["used"], "vram_load": None}
-            self._log("run", "start_req", mid)
+            self.runs[mid] = {
+                "popen": popen, "opts": clean, "env": engine_rules.redact([], env)[1],
+                "vram_before": gpu and gpu["used"], "vram_load": None,
+            }
             self.errors.pop(mid, None)
+            self._log("run", "start_req", mid)
+
+    def preview(self, mid, opts):
+        """The command hominfer would launch, with secrets masked (no VRAM check, no spawn)."""
+        gpu = self.gpu_cached()  # no nvidia-smi run per option change
+        argv, env, _ = self._command(mid, clean_options(self.registry.models[mid], opts),
+                                     gpu["total"] - gpu["used"] if gpu else 0)
+        argv, env = engine_rules.redact(argv, env)
+        return {"argv": shlex.join(argv), "env": env}
+
+    def _log(self, level, key, mid):
+        if self.events:
+            self.events.add(level, key, mid, name=self.registry.models[mid]["name"])
 
     def _refuse_no_vram(self, mid, free, need):
         others = [self.registry.models[o]["name"] for o, s in self.snapshot.get("models", {}).items()
@@ -240,10 +281,6 @@ class Supervisor:
             self.stopping.add(mid)
             self._log("info", "stop_req", mid)
         threading.Thread(target=self._kill, args=(mid, procs), daemon=True).start()
-
-    def _log(self, level, key, mid):
-        if self.events:
-            self.events.add(level, key, mid, name=self.registry.models[mid]["name"])
 
     def _kill(self, mid, procs):
         run = self.runs.get(mid)

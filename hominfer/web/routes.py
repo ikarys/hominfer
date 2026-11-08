@@ -127,6 +127,8 @@ ROUTES = [
     Route("GET", re.compile(r"/api/folders"), lambda app, m, b: folders.browse(b.get("path"))),
     Route("POST", re.compile(r"/api/settings"), _do(lambda app, m, b: app.settings.update(b))),
     Route("POST", re.compile(r"/api/(start|stop)/(\w+)"), _start_stop),
+    Route("POST", re.compile(r"/api/command/(\w+)"),
+          lambda app, m, b: app.supervisor.preview(_model(app, m[1]), b)),
 ]
 
 

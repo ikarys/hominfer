@@ -48,6 +48,7 @@ export function openModelForm(id, preset = {}) {
   if (!state.lib) api("/api/library").then(lib => { state.lib ??= lib; fileList(); }).catch(() => {});
   $("#taskList").innerHTML = Object.keys(state.taskKind).map(k => `<option value="${esc(k)}">`).join("");
   for (const k of FIELDS) f.elements[k].value = c[k] ?? "";
+  f.elements.extra_args.value = (c.extra_args || []).join(" ");
   f.elements.id.value = id || "";
   f.elements.id.disabled = !!id;
   paramFields(c.engine, c.params);
@@ -63,6 +64,7 @@ function readForm(f) {
   const params = {};
   const body = { name: el.name.value.trim(), kind: el.kind.value, engine: el.engine.value,
     desc: el.desc.value.trim(), task: el.task.value.trim(), port: +el.port.value, params };
+  body.extra_args = el.extra_args.value.split(/\s+/).filter(Boolean);
   f.querySelectorAll("[data-param]").forEach(inp => {
     const k = inp.dataset.param, v = inp.value.trim();
     if (!v) return;

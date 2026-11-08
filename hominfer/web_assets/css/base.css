@@ -34,6 +34,7 @@ button.link.bad { color: var(--err); }
 .msg:empty { display: none; }
 pre.log { margin: 0; max-height: 280px; overflow: auto; font: 11.5px/1.45 var(--font-mono); background: var(--panel-2);
   border-radius: var(--radius-sm); padding: 10px; white-space: pre-wrap; word-break: break-word; }
+pre.log.cmd { overflow-wrap: anywhere; }
 
 .toolbar { display: flex; gap: 8px; align-items: center; margin: 0 0 12px; }
 a.btn { font-size: 14px; font-weight: 600; border-radius: var(--radius-sm); padding: 7px 16px; text-decoration: none;
