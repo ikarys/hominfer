@@ -97,7 +97,7 @@ From a git checkout instead: `just run` (needs [just](https://github.com/casey/j
 ## Documentation
 
 - [How-to guides](docs/how-to.md): install an engine, add a model, profiles, custom engines, languages…
-- [Configuration](docs/configuration.md): `engines.json`, `models.json`, `settings.json`, environment variables
+- [Configuration](docs/configuration.md): what the page sets, environment variables, then the JSON files (`engines.json`, `models.json`, `settings.json`)
 - [Architecture](docs/architecture.md): how the code is organised
 - [Theming](docs/theming.md): add a theme or a page layout
 - [Contributing](CONTRIBUTING.md)

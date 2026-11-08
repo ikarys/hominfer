@@ -1,19 +1,72 @@
 # Configuration
 
-The launcher keeps three local JSON files in `~/.config/hominfer` (or `HOMINFER_CONFIG_DIR`); files left next to the code by an older git checkout are copied there on first start. None of them
-is versioned, and all three are optional: the launcher starts with no engine, no model and the default
+Most settings are changed from the page; the JSON files at the bottom are what the page writes and what
+you edit by hand for the rest.
+
+## From the page
+
+### Dashboard
+
+- model card: profile menu and param menus pick the start settings; **Save profile…** / **Delete
+  profile** (saved in `models.json`); **Edit** opens the model form; ★ marks the favorite model of a
+  section (`settings.json`).
+
+### Models
+
+- **Add a model**, **Library → Add as a model**, ⚙ in the models list: the model form (name,
+  identifier, kind, engine, Hugging Face task, description, model file, port, params, advanced
+  arguments), **Delete this model** in the form (the file is kept) (`models.json`).
+- In a param text field one value = fixed, several separated by commas = a menu on the card (first =
+  default).
+- **Reload models.json** reads the file again after a manual edit.
+- **Download from Hugging Face** downloads into the models folder.
+
+### Settings
+
+- **Language**, **Theme**, **Layout**, **Models folder** (`settings.json`)
+- **Inference engines**: **Install**, **Update** (adds or rebuilds an engine, `engines.json`)
+- **Engine settings** (cockpit layout: engine ⚙ → **Edit parameters** / **Reset to defaults**): default
+  value of each engine param, used when a model does not set it; running models keep their command line,
+  the next start uses the new defaults (`engines.json`).
+
+Done by hand only: an engine that isn't in the catalog (its command, health check, metrics…), `vram_mib`,
+`conflicts`, labelled menu values, texts in several languages, `restart`. After editing `models.json`,
+**Reload models.json** picks it up; a change to `engines.json` needs a restart of the launcher.
+
+## Environment variables
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `HOMINFER_HOST` | `127.0.0.1` | listen address (`0.0.0.0` = reachable from the LAN; the page has no login) |
+| `HOMINFER_PORT` | `8090` | listen port |
+| `HOMINFER_CONFIG_DIR` | `~/.config/hominfer` | where the three JSON files live |
+| `HOMINFER_LOG_DIR` | `~/.local/state/hominfer/logs` | model, download and install logs (a running model's log is emptied past 50 MiB, the 20 latest download logs are kept) |
+| `HOMINFER_STATS_FILE` | `~/.local/state/hominfer/stats.json` | usage history shown on the Stats page: hourly buckets per model (up time, busy time by requests running at once, peaks), saved every minute, kept 90 days |
+| `HOMINFER_MODELS_DIR` | `~/hominfer_models` | models folder until one is set in Settings |
+| `HOMINFER_ALLOWED_HOSTS` | empty | extra host names the page is opened by (comma-separated), e.g. a local DNS name; IP addresses, `localhost` and the machine's name always work, any other name gets a 403 |
+| `HF_TOKEN` | | Hugging Face token, for gated or private models |
+
+With the systemd service, set them in an override: `sudo systemctl edit hominfer`, then
+`[Service]` / `Environment=HOMINFER_PORT=9000`.
+
+## Configuration files
+
+The launcher keeps three local JSON files in `~/.config/hominfer` (or `HOMINFER_CONFIG_DIR`); files
+left next to the code by an older git checkout are copied there on first start. None of them is
+versioned, and all three are optional: the launcher starts with no engine, no model and the default
 settings.
 
 | File | Written by | Holds |
 |---|---|---|
-| `engines.json` | the engine catalog, or you | how to run each inference engine |
-| `models.json` | the page (Add / Edit a model) | the models: engine, file, port, params, profiles |
-| `settings.json` | the Settings page | UI language, theme, layout, models folder |
+| `engines.json` | the engine catalog, the engine parameters in Settings, or you | how to run each inference engine |
+| `models.json` | the page (model form, profiles), or you | the models: engine, file, port, params, profiles |
+| `settings.json` | the page (Settings, favorites) | UI language, theme, layout, models folder, favorites |
 
-## `engines.json`
+### `engines.json`
 
-How to run each inference engine. The engine catalog adds a block here when it installs an engine. The
-page can pick an engine for a model but never writes a command: anything else is edited by hand.
+How to run each inference engine. The engine catalog adds a block here when it installs an engine, and
+**Settings → Engine settings** changes the `default` of its params. The page never writes a command:
+the other keys are edited by hand.
 [`engines.example.json`](../engines.example.json) shows a GGUF server and an engine that fetches its own
 weights.
 
@@ -41,7 +94,7 @@ Placeholders in `command` and `env`: `{port}` `{file}` `{file_name}` `{file_dir}
 `{model_id}`, and every param. An argument or an env variable that ends up empty is dropped, which is
 how optional params work.
 
-### Engine metrics
+#### Engine metrics
 
 `metrics.show` lists up to 16 items, each with a `label` (text or `{"en": ..., "fr": ...}`) and either
 `"value": EXPR` or `"ratio": [EXPR_A, EXPR_B]` (A / B; with `"one_minus": true`, 1 - A / B).
@@ -57,9 +110,10 @@ requests running at once (against the limit), the queue peak, and how the busy t
 requests running: the data to size the engine's max concurrency. They are sampled with the other metrics
 (every 5 seconds at most), so very short requests can be missed.
 
-## `models.json`
+### `models.json`
 
-The models, written by the page. Per model:
+The models, written by the model form and the profile buttons of the page. Per model (the key is the
+form's **Identifier**):
 
 | Key | Meaning |
 |---|---|
@@ -71,31 +125,19 @@ The models, written by the page. Per model:
 | `vram_mib` | optional: VRAM to have free before starting. Estimated from the file size when missing |
 | `conflicts` | `{"port": "name"}`: other services that must not be running |
 | `params` | per engine param: one value (fixed), a list (a menu on the card, first = default), or `[value, label]` pairs |
+| `extra_args` | list of arguments appended to the engine's command (**Advanced arguments** in the form) |
 | `profiles` | named sets of param values, picked on the card |
 
-## `settings.json`
+`vram_mib` and `conflicts` are the only keys the form doesn't edit; it keeps them when it saves.
 
-Set from the Settings page and shared by every browser: `lang`, `theme`, `shell` (page layout, default `classic`), `models_dir` (default
-`~/hominfer_models`: downloads land there, and engines that fetch their own weights keep them there).
+### `settings.json`
 
-## Text in several languages
+Set from the page and shared by every browser: `lang`, `theme`, `shell` (page layout, default `classic`),
+`models_dir` (default `~/hominfer_models`: downloads land there, and engines that fetch their own weights
+keep them there), `favorites` (the model ids starred on the dashboard).
+
+### Text in several languages
 
 Any text of `engines.json`, `models.json` or the catalog (labels, descriptions) can be a plain string or
 one string per language: `{"en": "Parallel sessions", "fr": "Sessions parallèles"}`. The page shows the
 UI language, falling back to English.
-
-## Environment variables
-
-| Variable | Default | Meaning |
-|---|---|---|
-| `HOMINFER_HOST` | `127.0.0.1` | listen address (`0.0.0.0` = reachable from the LAN; the page has no login) |
-| `HOMINFER_PORT` | `8090` | listen port |
-| `HOMINFER_CONFIG_DIR` | `~/.config/hominfer` | where the three JSON files live |
-| `HOMINFER_LOG_DIR` | `~/.local/state/hominfer/logs` | model, download and install logs (a running model's log is emptied past 50 MiB, the 20 latest download logs are kept) |
-| `HOMINFER_STATS_FILE` | `~/.local/state/hominfer/stats.json` | usage history shown on the Stats page: hourly buckets per model (up time, busy time by requests running at once, peaks), saved every minute, kept 90 days |
-| `HOMINFER_MODELS_DIR` | `~/hominfer_models` | models folder until one is set in Settings |
-| `HOMINFER_ALLOWED_HOSTS` | empty | extra host names the page is opened by (comma-separated), e.g. a local DNS name; IP addresses, `localhost` and the machine's name always work, any other name gets a 403 |
-| `HF_TOKEN` | | Hugging Face token, for gated or private models |
-
-With the systemd service, set them in an override: `sudo systemctl edit hominfer`, then
-`[Service]` / `Environment=HOMINFER_PORT=9000`.
