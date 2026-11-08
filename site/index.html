@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>hominfer: run local AI models like home services</title>
+  <meta name="description" content="Pick a model from Hugging Face, see if it fits your GPU, install the engine it needs, then start and stop it from any browser on your network. Live VRAM, RAM, CPU and GPU load on every card.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <style>
+    html {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    html[data-theme="dark"] {
+      --bg: #151614;
+      --panel: #1e1f1c;
+      --line: #33342f;
+      --text: #ecebe6;
+      --muted: #a3a197;
+      --accent: #5fb3a0;
+      --accent-ink: #0f1a17;
+      color-scheme: dark;
+    }
+
+    html[data-theme="cyber"] {
+      --bg: #000300;
+      --panel: #06140a;
+      --line: #0f3d17;
+      --text: #b6ffc4;
+      --muted: #3fbf5a;
+      --accent: #00ff41;
+      --accent-ink: #000300;
+      color-scheme: dark;
+    }
+
+    html[data-theme="neo"] {
+      --bg: #0a0a0b;
+      --panel: #1a1a1d;
+      --line: #3a3a3e;
+      --text: #f2f2f2;
+      --muted: #a6a6a6;
+      --accent: #ff6b4a;
+      --accent-ink: #0a0a0b;
+      color-scheme: dark;
+    }
+
+    html[data-theme="pixel"] {
+      --bg: #1a1c2c;
+      --panel: #262b44;
+      --line: #3e4868;
+      --text: #f4f4f4;
+      --muted: #94b0c2;
+      --accent: #73eff7;
+      --accent-ink: #1a1c2c;
+      color-scheme: dark;
+    }
+
+    html[data-theme="light"] {
+      --bg: #f6f5f1;
+      --panel: #ffffff;
+      --line: #e2dfd6;
+      --text: #22211d;
+      --muted: #6d6a60;
+      --accent: #367a6b;
+      --accent-ink: #ffffff;
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Schibsted Grotesk", sans-serif;
+      font-size: 17px;
+      line-height: 1.6;
+      transition: background-color 250ms, color 250ms;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1180px;
+      margin-inline: auto;
+      padding-inline: clamp(20px, 5vw, 48px);
+    }
+
+    .site-header {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .header-inner {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .wordmark {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .header-nav {
+      display: flex;
+      gap: 24px;
+    }
+
+    .header-nav a {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .header-nav a:hover {
+      color: var(--text);
+    }
+
+    .hero {
+      padding-top: 96px;
+    }
+
+    h1 {
+      margin: 0 0 24px;
+      font-size: clamp(2.6rem, 6vw, 4.6rem);
+      font-weight: 500;
+      letter-spacing: -0.025em;
+      line-height: 1.05;
+      max-width: 14ch;
+    }
+
+    h2 {
+      margin: 0 0 24px;
+      font-size: clamp(1.7rem, 3vw, 2.4rem);
+      font-weight: 500;
+      letter-spacing: -0.015em;
+      line-height: 1.15;
+    }
+
+    p {
+      margin: 0 0 16px;
+      max-width: 60ch;
+    }
+
+    .hero-lede {
+      color: var(--muted);
+      font-size: 20px;
+      margin: 0 0 32px;
+    }
+
+    .install {
+      margin-bottom: 32px;
+    }
+
+    .codebox {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .code-scroll {
+      min-width: 0;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .cmd {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: nowrap;
+      color: var(--text);
+    }
+
+    .prompt {
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .copy {
+      flex: 0 0 auto;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--muted);
+      font-family: "Schibsted Grotesk", sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 4px 10px;
+      cursor: pointer;
+    }
+
+    .copy:hover {
+      color: var(--text);
+    }
+
+    .install-note {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 10px 0 0;
+    }
+
+    .install-note code {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 13px;
+    }
+
+    .theme-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 32px;
+    }
+
+    .theme-label {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .theme-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .layout-group {
+      padding-left: 12px;
+      border-left: 1px solid var(--line);
+    }
+
+    .layout-group .theme-radio {
+      padding: 6px 14px;
+    }
+
+    .theme-radio {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 14px 6px 10px;
+      font-family: "Schibsted Grotesk", sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .theme-radio[aria-checked="true"] {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .chip {
+      position: relative;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--chip-accent);
+      overflow: hidden;
+    }
+
+    .chip::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: var(--chip-bg);
+      clip-path: polygon(0 0, 100% 0, 0 100%);
+    }
+
+    .hero-shot {
+      margin: 40px 0 0;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 30px 80px -30px rgba(0, 0, 0, .6);
+    }
+
+    .hero-shot img {
+      display: block;
+      width: 100%;
+      height: auto;
+      transition: opacity 150ms;
+    }
+
+    .feature {
+      display: grid;
+      grid-template-columns: 5fr 7fr;
+      gap: 64px;
+      align-items: center;
+      padding: 96px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .feature-text h2 {
+      margin-bottom: 16px;
+    }
+
+    .feature-text p {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .feature-media img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+
+    .feature.reverse .feature-media {
+      order: -1;
+    }
+
+    .feature.reverse .feature-text {
+      order: 1;
+    }
+
+    .details {
+      border-top: 1px solid var(--line);
+      padding: 96px 0;
+    }
+
+    .details h2 {
+      margin-bottom: 40px;
+    }
+
+    .details dl {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 40px 48px;
+      margin: 0;
+    }
+
+    .details dt {
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .details dd {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .get-started {
+      border-top: 1px solid var(--line);
+      padding: 96px 0;
+    }
+
+    .get-started > .container > p {
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    .code-block {
+      margin-bottom: 24px;
+    }
+
+    .code-caption {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0 0 8px;
+    }
+
+    .get-started .links {
+      color: var(--muted);
+      margin: 32px 0 0;
+    }
+
+    .site-footer {
+      border-top: 1px solid var(--line);
+      padding: 32px 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .footer-nav {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-nav a {
+      color: var(--muted);
+    }
+
+    .footer-nav a:hover {
+      color: var(--text);
+    }
+
+    @media (max-width: 860px) {
+      .feature {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-text {
+        order: 0;
+      }
+
+      .feature-media {
+        order: 1;
+      }
+
+      .feature.reverse .feature-media {
+        order: 1;
+      }
+
+      .feature.reverse .feature-text {
+        order: 0;
+      }
+
+      .details dl {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .details dl {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body {
+        transition: none;
+      }
+
+      .hero-shot img {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="wordmark" href="#">hominfer</a>
+      <nav class="header-nav" aria-label="Primary">
+        <a href="https://github.com/ikarys/hominfer/tree/main/docs">Docs</a>
+        <a href="https://github.com/ikarys/hominfer/releases">Releases</a>
+        <a href="https://github.com/ikarys/hominfer">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="container">
+        <h1 id="hero-title">Run local AI models like home services.</h1>
+        <p class="hero-lede">Pick a model from Hugging Face, see if it fits your GPU, install the engine it needs, then start and stop it from any browser on your network. Live VRAM, RAM, CPU and GPU load on every card.</p>
+
+        <div class="install">
+          <div class="codebox">
+            <div class="code-scroll">
+              <span class="prompt" aria-hidden="true">$ </span><code class="cmd">curl -LsSf https://raw.githubusercontent.com/ikarys/hominfer/main/install.sh | bash</code>
+            </div>
+            <button class="copy" type="button" data-copy="curl -LsSf https://raw.githubusercontent.com/ikarys/hominfer/main/install.sh | bash">Copy</button>
+          </div>
+          <p class="install-note">Linux or WSL2, NVIDIA or AMD. Then open <code>http://127.0.0.1:8090</code>.</p>
+        </div>
+
+        <div class="theme-row">
+          <span class="theme-label">Try a theme and a layout:</span>
+          <div class="theme-group" role="radiogroup" aria-label="Theme">
+            <button class="theme-radio" type="button" role="radio" aria-checked="true" data-theme="dark" style="--chip-bg:#151614;--chip-accent:#5fb3a0"><span class="chip" aria-hidden="true"></span>Dark</button>
+            <button class="theme-radio" type="button" role="radio" aria-checked="false" data-theme="cyber" style="--chip-bg:#000300;--chip-accent:#00ff41"><span class="chip" aria-hidden="true"></span>Cyber</button>
+            <button class="theme-radio" type="button" role="radio" aria-checked="false" data-theme="neo" style="--chip-bg:#0a0a0b;--chip-accent:#ff6b4a"><span class="chip" aria-hidden="true"></span>Neo</button>
+            <button class="theme-radio" type="button" role="radio" aria-checked="false" data-theme="pixel" style="--chip-bg:#1a1c2c;--chip-accent:#73eff7"><span class="chip" aria-hidden="true"></span>Pixel</button>
+            <button class="theme-radio" type="button" role="radio" aria-checked="false" data-theme="light" style="--chip-bg:#f6f5f1;--chip-accent:#367a6b"><span class="chip" aria-hidden="true"></span>Light</button>
+          </div>
+          <div class="theme-group layout-group" role="radiogroup" aria-label="Layout">
+            <button class="theme-radio" type="button" role="radio" aria-checked="true" data-layout="cockpit">Cockpit</button>
+            <button class="theme-radio" type="button" role="radio" aria-checked="false" data-layout="classic">Classic</button>
+          </div>
+        </div>
+
+        <figure class="hero-shot">
+          <img id="hero-img" src="images/theme-dark-cockpit.png" alt="The hominfer dashboard, Dark theme" width="1600" height="1000" fetchpriority="high">
+        </figure>
+      </div>
+    </section>
+
+    <section class="features" aria-labelledby="feature-a-title">
+      <div class="container">
+        <article class="feature">
+          <div class="feature-text">
+            <h2 id="feature-a-title">Know if it runs before you download.</h2>
+            <p>Paste a repository. Every variant gets a verdict from your GPU, your installed engines and your free disk: fits on the GPU, needs a partial offload, doesn't fit, or needs an engine you don't have yet.</p>
+          </div>
+          <div class="feature-media">
+            <img src="images/hf-tts-verdict-cyber.png" alt="Hugging Face variants with a verdict for each one" width="1068" height="325" loading="lazy">
+          </div>
+        </article>
+
+        <article class="feature reverse">
+          <div class="feature-text">
+            <h2>Missing an engine? Install it from the page.</h2>
+            <p>llama.cpp, vLLM and others build in the background, with no sudo: the CUDA toolkit comes from NVIDIA's pip wheels, AMD and Intel get a Vulkan build. Missing system tools are listed before anything starts.</p>
+          </div>
+          <div class="feature-media">
+            <img src="images/engines-cyber.png" alt="The engine catalog" width="1068" height="712" loading="lazy">
+          </div>
+        </article>
+
+        <article class="feature">
+          <div class="feature-text">
+            <h2>See how your models are really used.</h2>
+            <p>Up time, busy time, peak requests and how many sessions run at once, per model and per engine, over a day, a week, three months or any range. The numbers you need to size context and parallel sessions.</p>
+          </div>
+          <div class="feature-media">
+            <img src="images/stats.png" alt="The Stats page" width="1600" height="1000" loading="lazy">
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="details" aria-labelledby="details-title">
+      <div class="container">
+        <h2 id="details-title">The rest of the day-to-day.</h2>
+        <dl>
+          <div>
+            <dt>Profiles</dt>
+            <dd>Context size, parallel sessions, vision, CPU or GPU: saved per model and switched in one click.</dd>
+          </div>
+          <div>
+            <dt>OpenAI-compatible</dt>
+            <dd>Every running model shows its local and LAN endpoint, ready for any client.</dd>
+          </div>
+          <div>
+            <dt>Auto-restart</dt>
+            <dd>An engine that dies or stops answering is restarted, at most three times an hour.</dd>
+          </div>
+          <div>
+            <dt>Logs and events</dt>
+            <dd>Live engine log, the exact command line, and a log of starts, crashes and warnings.</dd>
+          </div>
+          <div>
+            <dt>Engines are configuration</dt>
+            <dd>A new engine is a JSON block, not code. No model or engine is hard-wired.</dd>
+          </div>
+          <div>
+            <dt>Two layouts, six themes</dt>
+            <dd>A scrolling page or a dense cockpit, in English or French.</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="get-started" aria-labelledby="get-started-title">
+      <div class="container">
+        <h2 id="get-started-title">Install in one line.</h2>
+        <p>The installer uses uv, puts hominfer on your PATH and can set up a systemd service that starts at boot.</p>
+
+        <div class="code-block">
+          <p class="code-caption">Just the launcher</p>
+          <div class="codebox">
+            <div class="code-scroll">
+              <span class="prompt" aria-hidden="true">$ </span><code class="cmd">curl -LsSf https://raw.githubusercontent.com/ikarys/hominfer/main/install.sh | bash</code>
+            </div>
+            <button class="copy" type="button" data-copy="curl -LsSf https://raw.githubusercontent.com/ikarys/hominfer/main/install.sh | bash">Copy</button>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <p class="code-caption">As a service, reachable from your LAN</p>
+          <div class="codebox">
+            <div class="code-scroll">
+              <span class="prompt" aria-hidden="true">$ </span><code class="cmd">curl -LsSf https://raw.githubusercontent.com/ikarys/hominfer/main/install.sh | bash -s -- --service --lan</code>
+            </div>
+            <button class="copy" type="button" data-copy="curl -LsSf https://raw.githubusercontent.com/ikarys/hominfer/main/install.sh | bash -s -- --service --lan">Copy</button>
+          </div>
+        </div>
+
+        <p class="links">Read the <a href="https://github.com/ikarys/hominfer/blob/main/docs/how-to.md">how-to guide</a> or the <a href="https://github.com/ikarys/hominfer/blob/main/docs/configuration.md">configuration reference</a>.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>hominfer, MIT license</span>
+      <nav class="footer-nav" aria-label="Footer">
+        <a href="https://github.com/ikarys/hominfer">GitHub</a>
+        <a href="https://github.com/ikarys/hominfer/tree/main/docs">Docs</a>
+        <a href="https://github.com/ikarys/hominfer/releases">Releases</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const themes = { dark: "Dark", cyber: "Cyber", neo: "Neo", pixel: "Pixel", light: "Light" };
+      const layouts = { cockpit: "cockpit", classic: "classic" };
+      // The cockpit + cyber shot is the README's main screenshot.
+      const shot = (t, l) => (t === "cyber" && l === "cockpit" ? "images/dashboard.png" : `images/theme-${t}-${l}.png`);
+      const root = document.documentElement;
+      const hero = document.getElementById("hero-img");
+      const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+      const state = { theme: "dark", layout: "cockpit" };
+
+      const render = (instant) => {
+        root.setAttribute("data-theme", state.theme);
+        document.querySelectorAll("[data-theme].theme-radio, [data-layout]").forEach((r) => {
+          const on = r.dataset.theme ? r.dataset.theme === state.theme : r.dataset.layout === state.layout;
+          r.setAttribute("aria-checked", on ? "true" : "false");
+        });
+        try { localStorage.setItem("hominfer-site-view", JSON.stringify(state)); } catch (e) {}
+        const src = shot(state.theme, state.layout);
+        const alt = `The hominfer dashboard, ${themes[state.theme]} theme, ${state.layout} layout`;
+        if (instant || reduce.matches) { hero.src = src; hero.alt = alt; return; }
+        hero.style.opacity = "0";
+        const img = new Image();
+        img.src = src;
+        img.onload = () => { hero.src = src; hero.alt = alt; hero.style.opacity = "1"; };
+        img.onerror = () => { hero.alt = alt; hero.style.opacity = "1"; };
+      };
+
+      try {
+        const saved = JSON.parse(localStorage.getItem("hominfer-site-view") || "{}");
+        if (themes[saved.theme]) state.theme = saved.theme;
+        if (layouts[saved.layout]) state.layout = saved.layout;
+      } catch (e) {}
+      render(true);
+
+      document.querySelectorAll('[role="radiogroup"]').forEach((group) => {
+        const radios = [...group.querySelectorAll('[role="radio"]')];
+        const pick = (r) => {
+          if (r.dataset.layout) state.layout = r.dataset.layout; else state.theme = r.dataset.theme;
+          render(false);
+        };
+        radios.forEach((r, i) => {
+          r.addEventListener("click", () => pick(r));
+          r.addEventListener("keydown", (e) => {
+            let n = i;
+            if (e.key === "ArrowRight" || e.key === "ArrowDown") n = (i + 1) % radios.length;
+            else if (e.key === "ArrowLeft" || e.key === "ArrowUp") n = (i - 1 + radios.length) % radios.length;
+            else if (e.key === "Home") n = 0;
+            else if (e.key === "End") n = radios.length - 1;
+            else return;
+            e.preventDefault();
+            radios[n].focus();
+            pick(radios[n]);
+          });
+        });
+      });
+
+      addEventListener("load", () => Object.keys(themes).forEach((t) => Object.keys(layouts).forEach((l) => { new Image().src = shot(t, l); })));
+
+      document.querySelectorAll(".copy").forEach((b) => b.addEventListener("click", () => {
+        const text = b.dataset.copy;
+        if (!navigator.clipboard || !text) return;
+        navigator.clipboard.writeText(text).then(() => {
+          const original = b.textContent;
+          b.textContent = "Copied";
+          setTimeout(() => { b.textContent = original; }, 1500);
+        });
+      }));
+    })();
+  </script>
+</body>
+</html>

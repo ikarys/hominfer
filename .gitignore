@@ -9,3 +9,4 @@ settings.json
 build/
 *.egg-info/
 dist/
+site/images/
