@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hominfer"
-version = "0.1.0"
+version = "0.2.0"
 description = "Your AI models, served from home: start / stop local inference engines from any browser, with live VRAM, RAM and GPU."
 readme = "README.md"
 license = "MIT"
