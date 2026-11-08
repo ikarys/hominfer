@@ -46,8 +46,8 @@ Linux / WSL2, NVIDIA or AMD (APUs included).
 
 ### Themes
 
-The screenshots above use the *cockpit* layout with the *cyber* theme. The same dashboard in the
-*classic* layout:
+The screenshots above use the *cockpit* layout with the *cyber* theme. The same dashboard with the other
+themes:
 
 | Dark | Light |
 |---|---|
