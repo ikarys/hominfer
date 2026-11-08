@@ -51,6 +51,12 @@ having at least those labels are summed. An item without a match (or dividing by
 `event` (optional): `"preemptions"` marks a counter whose increase is logged in the event log.
 The launcher reads the endpoint for ready models only, at most every 5 seconds.
 
+`metrics.sessions` (optional) names the gauges of concurrent requests: `{"running": EXPR, "waiting": EXPR,
+"limit": EXPR}` (`waiting` and `limit` optional). From the model's start, the card then shows the peak of
+requests running at once (against the limit), the queue peak, and how the busy time splits between 1, 2, 3...
+requests running: the data to size the engine's max concurrency. They are sampled with the other metrics
+(every 5 seconds at most), so very short requests can be missed.
+
 ## `models.json`
 
 The models, written by the page. Per model:

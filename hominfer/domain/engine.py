@@ -11,7 +11,7 @@ from pathlib import Path
 
 from ..errors import LaunchError
 from ..i18n import tr
-from . import metrics
+from . import metrics, sessions
 
 PLACEHOLDER = re.compile(r"\{(\w+)\}")
 BUILTIN_VARS = {"port", "file", "file_name", "file_dir", "models_dir", "model_id"}
@@ -74,6 +74,7 @@ def validate(eid, e):
         m = e["metrics"]
         need(isinstance(m, dict) and str(m.get("path", "")).startswith("/") and metrics.valid_show(m.get("show")),
              "cfg.metrics", max=metrics.MAX_ITEMS, units=", ".join(metrics.UNITS))
+        need("sessions" not in m or sessions.valid_spec(m["sessions"]), "cfg.metrics_sessions")
     params = e.get("params", {})
     need(isinstance(params, dict) and all(WORD.fullmatch(k) for k in params), "cfg.params_keys")
     need(e.get("device_param") in (None, *params), "cfg.device_param")

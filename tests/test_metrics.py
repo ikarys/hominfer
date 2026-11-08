@@ -80,6 +80,7 @@ def test_engine_accepts_good_metrics():
     {"path": "/m", "show": [{"label": "A", "value": "a b"}]},
     {"path": "/m", "show": [{"label": "A", "value": "a{k=v}"}]},
     {"path": "/m", "show": [{"label": "A", "value": "a", "unit": "kg"}]},
+    GOOD | {"sessions": {"waiting": "w"}},
     "nope",
 ])
 def test_engine_rejects_bad_metrics(bad):
@@ -106,3 +107,12 @@ def test_service_evaluates_caches_and_survives_failures():
     svc.collect(ids)
     assert len(calls) == 3  # cached, failures included
 
+
+
+def test_engine_metrics_reads_sessions_gauges():
+    eng = {"metrics": {"path": "/m", "show": [{"label": "A", "value": "a"}],
+                       "sessions": {"running": "run", "limit": "lim"}}}
+    reg = type("R", (), {"models": {"m": {"port": 1, "engine_id": "e"}}, "engines": {"e": eng}})()
+    svc = EngineMetrics(reg, lambda port, path: "a 1\nrun 2\nlim 4\n")
+    svc.collect(["m"])
+    assert svc.samples() == {"m": {"running": 2, "limit": 4}}

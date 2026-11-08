@@ -37,6 +37,10 @@ export function cardHtml(id, m, hidden) {
         <div class="metrics eng" data-k="engineTiles"></div>
         <div class="caption">${esc(t("ui.card.engine_metrics"))}</div>
       </div>
+      <div data-k="sessions" hidden>
+        <div class="metrics eng" data-k="sessionTiles"></div>
+        <div class="caption">${esc(t("ui.card.sessions"))}</div>
+      </div>
       <div class="opts">${optionsHtml(m)}</div>
       <div class="actions">
         <button class="primary" data-act="start">${esc(t("ui.card.start"))}</button>
@@ -215,6 +219,7 @@ export function updateCard(id, s, st) {
     + (s.state === "ready" && !s.managed ? t("ui.state.external") : "");
   updateMetrics(id, card, s, st, running);
   updateEngineMetrics(card, s.metrics);
+  updateSessions(card, s.sessions);
   const eb = $("[data-k=engBehind]", card);
   eb.hidden = !s.engine_behind;
   if (s.engine_behind) eb.textContent = t("ui.card.engine_behind", { n: s.engine_behind });
@@ -254,6 +259,16 @@ function updateMetrics(id, card, s, st, running) {
 }
 
 // the engine's own counters (Prometheus), when it exposes some
+function updateSessions(card, ss) {
+  $("[data-k=sessions]", card).hidden = !ss;
+  if (!ss) return;
+  const tiles = [[ss.peak + (ss.limit ? ` / ${ss.limit}` : ""), "ui.card.sessions_peak"],
+    ...(ss.peak_waiting == null ? [] : [[ss.peak_waiting, "ui.card.sessions_queue"]]),
+    [ss.share.map(([n, f]) => `${n}: ${Math.round(f * 100)} %`).join(" · "), "ui.card.sessions_share"]];
+  $("[data-k=sessionTiles]", card).innerHTML = tiles.map(([v, k]) =>
+    `<div class="metric"><b>${esc(String(v))}</b><span>${esc(t(k))}</span></div>`).join("");
+}
+
 function updateEngineMetrics(card, items) {
   $("[data-k=engine]", card).hidden = !items?.length;
   $("[data-k=engineTiles]", card).innerHTML = (items || []).map(i =>

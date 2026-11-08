@@ -16,6 +16,7 @@ import psutil
 from ..domain import engine as engine_rules
 from ..domain import events as event_rules
 from ..domain import restart as restart_rules
+from ..domain import sessions as session_rules
 from ..domain.model import clean_options
 from ..domain.status import baseline_ok, model_state, model_vram, on_gpu_for
 from ..errors import LaunchError
@@ -46,6 +47,7 @@ class Supervisor:
         self.errors = {}     # id -> message
         self.stopping = set()
         self.restarts = {}   # id -> epoch times of its automatic restarts
+        self.sessions = {}   # id -> concurrent sessions seen since the model started (domain/sessions)
         self.baseline = None  # VRAM used with no model, once seen
         self.pcache = {}     # pid -> psutil.Process (cpu_percent needs its history)
         self.snapshot = {"ready": False}
@@ -98,6 +100,7 @@ class Supervisor:
         healthy = self._probe(procs)
         running = any(procs.values())
         metrics = self.engine_metrics.collect([mid for mid, ok in healthy.items() if ok]) if self.engine_metrics else {}
+        samples = self.engine_metrics.samples() if self.engine_metrics else {}
         mem = self._gpu_mem(gpu, procs)
         if mem is not None:  # measured per process: everything else is the baseline
             self.baseline = max(0, gpu["used"] - sum(mem.values()))
@@ -111,8 +114,11 @@ class Supervisor:
             allocated = bool(gpu) and (gpu["used"] - self.baseline_mib()) > 256
             on_gpu = on_gpu_for(procs, gpu["pids"], allocated) if gpu else {mid: False for mid in procs}
         with self.lock:
+            for mid, sample in samples.items():
+                session_rules.record(self.sessions.setdefault(mid, session_rules.new_stats()), sample, time.time())
             models = {mid: self._model_view(mid, m, procs.get(mid, []), gpu, on_gpu, healthy.get(mid, False),
                                             mem and mem.get(mid)) | ({"metrics": metrics[mid]} if mid in metrics else {})
+                      | {"sessions": session_rules.summary(self.sessions[mid]) if mid in self.sessions else None}
                       for mid, m in self.registry.models.items()}
             alive = {p.pid for ps in procs.values() for p in ps}
             self.pcache = {pid: p for pid, p in self.pcache.items() if pid in alive}
@@ -278,6 +284,7 @@ class Supervisor:
                 "vram_before": gpu and gpu["used"], "vram_load": None, "watch": restart_rules.new_watch(),
             }
             self.errors.pop(mid, None)
+            self.sessions[mid] = session_rules.new_stats()
             self._log("run", "start_req", mid)
 
     def preview(self, mid, opts):
