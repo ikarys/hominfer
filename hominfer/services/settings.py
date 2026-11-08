@@ -1,5 +1,5 @@
 """User settings (settings.json, local), for every browser: UI language, theme, shell, models folder,
-favourite models (listed first, shown by default on the dashboard)."""
+listen address, favourite models (listed first, shown by default on the dashboard)."""
 import json
 import re
 from pathlib import Path
@@ -40,6 +40,18 @@ def _folder(text):
     return p if str(text).strip() and p.is_absolute() else None
 
 
+def _port(value):
+    """Listen port, or None when it isn't an int (not a bool) in 1024..65535."""
+    if isinstance(value, int) and not isinstance(value, bool) and 1024 <= value <= 65535:
+        return value
+    return None
+
+
+def _lan(value):
+    """LAN choice, or None when it isn't a bool."""
+    return value if isinstance(value, bool) else None
+
+
 class Settings:
     def __init__(self, path, *, models_busy=lambda: False):
         """models_busy: () -> True while something writes into the models folder (downloads)."""
@@ -49,8 +61,11 @@ class Settings:
                        "theme": s["theme"] if s["theme"] in theme_names() else DEFAULTS["theme"],
                        "shell": s["shell"] if s["shell"] in shell_names() else DEFAULTS["shell"],
                        "models_dir": s["models_dir"] if _folder(s["models_dir"]) else DEFAULTS["models_dir"],
-                       "favorites": _favorites(s.get("favorites")) or []}
+                       "favorites": _favorites(s.get("favorites")) or [],
+                       "port": _port(s.get("port")),
+                       "lan": _lan(s.get("lan"))}
         i18n.set_lang(self.values["lang"])
+        self.started = self.listen()  # address this run listens on; __main__ serves on it
 
     def models_dir(self):
         """The models folder (created if missing)."""
@@ -58,12 +73,35 @@ class Settings:
         p.mkdir(parents=True, exist_ok=True)
         return p
 
+    def listen(self):
+        """The address to listen on: the LAN choice and port from settings, else the environment."""
+        lan = self.values["lan"]
+        host = "0.0.0.0" if lan is True else "127.0.0.1" if lan is False else config.LISTEN_HOST
+        return host, self.values["port"] or config.LISTEN_PORT
+
     def update(self, body):
         new = self.values | {k: str(body[k]).strip() for k in DEFAULTS if k in body}
         if "favorites" in body:
             new["favorites"] = _favorites(body["favorites"])
             if new["favorites"] is None:
                 raise LaunchError(tr("settings.bad_favorites"))
+        if "port" in body:
+            raw = body["port"]
+            if raw is None or str(raw).strip() == "":
+                new["port"] = None
+            else:
+                try:
+                    port = int(str(raw).strip())
+                except ValueError:
+                    raise LaunchError(tr("settings.bad_port"))
+                if not 1024 <= port <= 65535:
+                    raise LaunchError(tr("settings.bad_port"))
+                new["port"] = port
+        if "lan" in body:
+            lan = body["lan"]
+            if lan is not None and not isinstance(lan, bool):
+                raise LaunchError(tr("settings.bad_lan"))
+            new["lan"] = lan
         if new["lang"] not in i18n.LOCALES:
             raise LaunchError(tr("settings.bad_lang"))
         if new["theme"] not in theme_names():

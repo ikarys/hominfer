@@ -13,7 +13,8 @@ def main():
     config.CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     config.LOG_DIR.mkdir(parents=True, exist_ok=True)
     app = build()
-    server = serve(app, config.LISTEN_HOST, config.LISTEN_PORT)
+    host, port = app.settings.listen()
+    server = serve(app, host, port)
 
     def stop(*_):
         app.supervisor.shutdown()
@@ -23,7 +24,7 @@ def main():
         signal.signal(sig, stop)
     app.supervisor.poll()
     threading.Thread(target=app.supervisor.run_forever, args=(config.POLL_S,), daemon=True).start()
-    print(f"Hominfer: http://{config.LISTEN_HOST}:{config.LISTEN_PORT}   (Ctrl+C to stop)", flush=True)
+    print(f"Hominfer: http://{host}:{port}   (Ctrl+C to stop)", flush=True)
     server.serve_forever()
 
 

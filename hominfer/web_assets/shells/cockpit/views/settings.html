@@ -10,6 +10,13 @@
             <label class="field">{{t:ui.set.models_dir}}<input name="models_dir" required></label>
             <div class="row"><button type="button" id="setBrowse">{{t:ui.set.browse}}</button><button>{{t:ui.form.save}}</button></div>
           </form>
+          <form id="setListen">
+            <label class="field">{{t:ui.set.port}}<input name="port" type="number" min="1024" max="65535"></label>
+            <label class="ck-check"><input type="checkbox" name="lan"> {{t:ui.set.lan}}</label>
+            <div class="row"><button>{{t:ui.form.save}}</button></div>
+          </form>
+          <div class="meta flat">{{t:ui.set.listen_hint}}</div>
+          <div class="msg" id="setListenMsg" role="status"></div>
           <div class="msg" id="setMsg" role="status"></div>
         </div>
       </section>

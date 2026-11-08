@@ -1,16 +1,17 @@
-// Settings view: language, theme, shell and models folder of the launcher (settings.json), inference engines
+// Settings view: language, theme, shell, models folder and listen address of the launcher (settings.json), inference engines
 import { api } from "../api.js";
 import { pickFolder } from "../components/folder-picker.js";
 import { $, esc } from "../dom.js";
-import { settings } from "../i18n.js";
+import { settings, t } from "../i18n.js";
 import { shellOptions, themeOptions } from "../theme.js";
 
-async function save(change) {
-  $("#setMsg").textContent = "";
+async function save(change, msgId = "setMsg") {
+  const msg = $(`#${msgId}`);
+  msg.textContent = "";
   try {
     await api("/api/settings", change);
     location.reload();  // texts, theme and shell are rendered by the server
-  } catch (err) { $("#setMsg").textContent = err.message; }
+  } catch (err) { msg.textContent = err.message; }
 }
 
 export function bindSettings() {
@@ -20,6 +21,22 @@ export function bindSettings() {
   $("#setTheme").innerHTML = themeOptions();
   $("#setShell").innerHTML = shellOptions();
   folder.value = settings.modelsDir;
+  const listenForm = $("#setListen");
+  const portInput = listenForm.elements.port;
+  const lanInput = listenForm.elements.lan;
+  portInput.value = settings.listenNext[1];
+  portInput.placeholder = settings.listenNext[1];
+  lanInput.checked = settings.listenNext[0] === "0.0.0.0";
+  if (settings.listenNow[0] !== settings.listenNext[0] || settings.listenNow[1] !== settings.listenNext[1]) {
+    $("#setListenMsg").textContent = t("ui.set.listen_pending", {
+      port: settings.listenNext[1],
+      where: t(settings.listenNext[0] === "0.0.0.0" ? "ui.set.listen_lan" : "ui.set.listen_local"),
+    });
+  }
+  listenForm.addEventListener("submit", e => {
+    e.preventDefault();
+    save({ port: portInput.value.trim() === "" ? null : portInput.value.trim(), lan: lanInput.checked }, "setListenMsg");
+  });
   $("#setLang").addEventListener("change", e => save({ lang: e.target.value }));
   $("#setTheme").addEventListener("change", e => save({ theme: e.target.value }));
   $("#setShell").addEventListener("change", e => save({ shell: e.target.value }));

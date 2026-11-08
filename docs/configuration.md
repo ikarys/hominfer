@@ -24,6 +24,7 @@ you edit by hand for the rest.
 ### Settings
 
 - **Language**, **Theme**, **Layout**, **Models folder** (`settings.json`)
+- **Port**, **Reachable from the LAN** (`settings.json`): the launcher's address, applied at its next restart; they take precedence over `HOMINFER_PORT` and `HOMINFER_HOST`
 - **Inference engines**: **Install**, **Update** (adds or rebuilds an engine, `engines.json`)
 - **Engine settings** (cockpit layout: engine ⚙ → **Edit parameters** / **Reset to defaults**): default
   value of each engine param, used when a model does not set it; running models keep their command line,
@@ -37,8 +38,8 @@ Done by hand only: an engine that isn't in the catalog (its command, health chec
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `HOMINFER_HOST` | `127.0.0.1` | listen address (`0.0.0.0` = reachable from the LAN; the page has no login) |
-| `HOMINFER_PORT` | `8090` | listen port |
+| `HOMINFER_HOST` | `127.0.0.1` | listen address (`0.0.0.0` = reachable from the LAN; the page has no login), unless **Settings → Reachable from the LAN** is set |
+| `HOMINFER_PORT` | `8090` | listen port, unless **Settings → Port** is set |
 | `HOMINFER_CONFIG_DIR` | `~/.config/hominfer` | where the three JSON files live |
 | `HOMINFER_LOG_DIR` | `~/.local/state/hominfer/logs` | model, download and install logs (a running model's log is emptied past 50 MiB, the 20 latest download logs are kept) |
 | `HOMINFER_STATS_FILE` | `~/.local/state/hominfer/stats.json` | usage history shown on the Stats page: hourly buckets per model (up time, busy time by requests running at once, peaks), saved every minute, kept 90 days |
@@ -60,7 +61,7 @@ settings.
 |---|---|---|
 | `engines.json` | the engine catalog, the engine parameters in Settings, or you | how to run each inference engine |
 | `models.json` | the page (model form, profiles), or you | the models: engine, file, port, params, profiles |
-| `settings.json` | the page (Settings, favorites) | UI language, theme, layout, models folder, favorites |
+| `settings.json` | the page (Settings, favorites) | UI language, theme, layout, models folder, listen address, favorites |
 
 ### `engines.json`
 
@@ -134,7 +135,8 @@ form's **Identifier**):
 
 Set from the page and shared by every browser: `lang`, `theme`, `shell` (page layout, default `classic`),
 `models_dir` (default `~/hominfer_models`: downloads land there, and engines that fetch their own weights
-keep them there), `favorites` (the model ids starred on the dashboard).
+keep them there), `port` and `lan` (listen port and LAN access, `null` = the environment decides),
+`favorites` (the model ids starred on the dashboard).
 
 ### Text in several languages
 

@@ -12,6 +12,13 @@
       <button>{{t:ui.form.save}}</button>
     </form>
     <div class="meta flat">{{t:ui.set.models_dir_hint}}</div>
+    <form class="row" id="setListen">
+      <label class="field">{{t:ui.set.port}}<input name="port" type="number" min="1024" max="65535"></label>
+      <label class="check"><input type="checkbox" name="lan"> {{t:ui.set.lan}}</label>
+      <button>{{t:ui.form.save}}</button>
+    </form>
+    <div class="meta flat">{{t:ui.set.listen_hint}}</div>
+    <div class="msg" id="setListenMsg" role="status"></div>
     <div class="msg" id="setMsg"></div>
     <div class="meta flat">{{t:ui.set.hint}}</div>
   </section>

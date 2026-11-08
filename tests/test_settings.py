@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from hominfer import i18n
+from hominfer import config, i18n
 from hominfer.errors import LaunchError
 from hominfer.services.settings import DEFAULTS, Settings
 
@@ -15,7 +15,7 @@ def path(tmp_path):
 
 def test_defaults_without_a_file(path):
     s = Settings(path)
-    assert s.values == DEFAULTS | {"favorites": []}
+    assert s.values == DEFAULTS | {"favorites": [], "port": None, "lan": None}
     assert s.models_dir() == Path(DEFAULTS["models_dir"]).expanduser()
 
 
@@ -42,6 +42,10 @@ def test_models_dir_accepts_home_paths(path):
     ({"favorites": "qwen"}, "list of model ids"),
     ({"favorites": ["../x"]}, "list of model ids"),
     ({"favorites": [1]}, "list of model ids"),
+    ({"port": "80"}, "between 1024"),
+    ({"port": "abc"}, "between 1024"),
+    ({"port": "70000"}, "between 1024"),
+    ({"lan": "yes"}, "true or false"),
 ])
 def test_update_rejects(path, change, message):
     s = Settings(path)
@@ -59,7 +63,7 @@ def test_models_dir_cant_move_during_a_download(path, tmp_path):
 
 def test_invalid_file_values_fall_back_to_defaults(path):
     path.write_text(json.dumps({"lang": "xx", "theme": "pink", "shell": "pink", "models_dir": "relative"}))
-    assert Settings(path).values == DEFAULTS | {"favorites": []}
+    assert Settings(path).values == DEFAULTS | {"favorites": [], "port": None, "lan": None}
 
 
 def test_favorites_are_saved_without_duplicates(path):
@@ -68,3 +72,24 @@ def test_favorites_are_saved_without_duplicates(path):
     assert Settings(path).values["favorites"] == ["qwen", "gemma"]
     path.write_text(json.dumps({"favorites": "bad"}))
     assert Settings(path).values["favorites"] == []
+
+
+def test_listen_follows_settings_over_environment(path, monkeypatch):
+    monkeypatch.setattr(config, "LISTEN_HOST", "10.0.0.5")
+    monkeypatch.setattr(config, "LISTEN_PORT", 9999)
+    s = Settings(path)
+    assert s.listen() == ("10.0.0.5", 9999)
+    s.update({"port": "9100", "lan": True})
+    assert s.listen() == ("0.0.0.0", 9100)
+    assert Settings(path).values["port"] == 9100
+    assert Settings(path).values["lan"] is True
+    s.update({"lan": False, "port": ""})
+    assert s.listen() == ("127.0.0.1", 9999)
+
+
+def test_started_keeps_the_address_of_this_run(path):
+    s = Settings(path)
+    before = s.started
+    s.update({"port": "9200"})
+    assert s.started == before
+    assert s.listen()[1] == 9200

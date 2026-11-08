@@ -65,6 +65,8 @@ def render(settings):
     boot = {"lang": lang, "theme": theme, "shell": shell, "themes": theme_names(), "shells": shell_names(),
             "shell_js": web_assets.shell_script(shell),
             "models_dir": settings.values["models_dir"], "favorites": settings.values["favorites"],
+            "port": settings.values["port"], "lan": settings.values["lan"],
+            "listen_now": list(settings.started), "listen_next": list(settings.listen()),
             "langs": {code: texts.get("lang.name", code) for code, texts in i18n.LOCALES.items()},
             "strings": i18n.LOCALES[i18n.DEFAULT_LANG] | i18n.LOCALES.get(lang, {})}
     views = "".join(_read(*web_assets.view_parts(shell, v)) for v in _VIEW_FILES)

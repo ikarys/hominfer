@@ -26,7 +26,12 @@ DYNAMIC = {"ui.theme.": theme_names(),
 
 class FakeSettings:
     def __init__(self, lang, theme="cyber", shell="classic"):
-        self.values = {"lang": lang, "theme": theme, "shell": shell, "models_dir": "~/hominfer_models", "favorites": []}
+        self.values = {"lang": lang, "theme": theme, "shell": shell, "models_dir": "~/hominfer_models", "favorites": [],
+                       "port": None, "lan": None}
+        self.started = ("127.0.0.1", 8090)
+
+    def listen(self):
+        return self.started
 
 
 def page_literals():

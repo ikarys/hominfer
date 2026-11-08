@@ -6,7 +6,7 @@ from pathlib import Path
 PKG = Path(__file__).resolve().parent  # bundled assets: page, locales, catalog
 HOME = Path.home()
 
-# localhost only by default; set HOMINFER_HOST=0.0.0.0 to reach the page from the LAN
+# listen address/port; these environment values apply unless Settings sets a port or the LAN choice
 LISTEN_HOST = os.environ.get("HOMINFER_HOST", "127.0.0.1")
 LISTEN_PORT = int(os.environ.get("HOMINFER_PORT", "8090"))
 # extra host names the page may be reached by (comma-separated); IPs, localhost and this machine's name always pass
