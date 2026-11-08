@@ -14,6 +14,7 @@ from .services.library import Library
 from .services.model_editor import ModelEditor
 from .services.registry import Registry
 from .services.settings import Settings
+from .services.stats import StatsHistory
 from .services.supervisor import Supervisor
 from .services.updates import Updates
 
@@ -44,7 +45,8 @@ def build():
     supervisor = Supervisor(registry, updates, gpu=gpu.query, keep_awake=KeepAwake(), log_dir=config.LOG_DIR,
                             models_dir=models_dir, default_baseline_mib=config.DEFAULT_BASELINE_MIB,
                             gpu_mem=gpu.process_mib, engine_metrics=EngineMetrics(registry),
-                            win_gpu=win_gpu.processes, events=events)
+                            win_gpu=win_gpu.processes, events=events,
+                            stats=StatsHistory(config.STATS_FILE))
     downloads = Downloads(models_dir, config.LOG_DIR)
     library = Library(models_dir, registry, downloads)
     catalog = Catalog(config.CATALOG_DIR, registry, config.LOG_DIR, models_dir)

@@ -11,10 +11,10 @@ from .. import config, i18n
 from ..infra import web_assets
 from ..services.settings import shell_names, theme_names
 
-VIEWS = ("/", "/index.html", "/models", "/modeles", "/settings")  # /modeles: old address of /models
+VIEWS = ("/", "/index.html", "/models", "/modeles", "/settings", "/stats")  # /modeles: old address of /models
 _TEXT = re.compile(r"\{\{t:([\w.]+)\}\}")
 _BUILT_IN_THEMES = ("auto", "light", "dark")  # in tokens.css: no stylesheet of their own
-_VIEW_FILES = ("home", "manage", "settings")
+_VIEW_FILES = ("home", "manage", "settings", "stats")
 
 
 @cache

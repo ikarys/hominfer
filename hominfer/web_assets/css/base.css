@@ -43,4 +43,5 @@ a.btn { font-size: 14px; font-weight: 600; border-radius: var(--radius-sm); padd
 .row input { flex: 1; min-width: 200px; }
 
 /* one page, several views: body.page-<view> shows only its own sections */
-body:not(.page-home) .home, body:not(.page-manage) .manage, body:not(.page-settings) .settings { display: none; }
+body:not(.page-home) .home, body:not(.page-manage) .manage, body:not(.page-settings) .settings,
+body:not(.page-stats) .stats { display: none; }

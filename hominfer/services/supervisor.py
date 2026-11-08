@@ -29,15 +29,17 @@ LOG_CAP = 50 * 2**20  # a running model's log is emptied past this size
 
 class Supervisor:
     def __init__(self, registry, updates, *, gpu, keep_awake, log_dir, models_dir, default_baseline_mib,
-                 gpu_mem=None, engine_metrics=None, win_gpu=None, events=None):
+                 gpu_mem=None, engine_metrics=None, win_gpu=None, events=None, stats=None):
         """gpu: () -> GPU state or None; keep_awake: .set(bool) holds off the host's sleep;
         models_dir: () -> the models folder (a setting);
         gpu_mem: (pids, pdev, unified) -> {pid: MiB}, the per-process GPU memory when the driver gives it (AMD);
         engine_metrics: .collect(ids) -> {id: metrics} of the engines that expose some;
         win_gpu: () -> [{name, bytes}] GPU memory reserved by Windows processes (WSL), or None;
-        events: the EventLog that gets what changed between two polls and the start / stop requests."""
+        events: the EventLog that gets what changed between two polls and the start / stop requests;
+        stats: the StatsHistory that gets, every poll, the models up and their session gauges."""
         self.registry, self.updates, self.gpu, self.keep_awake = registry, updates, gpu, keep_awake
         self.gpu_mem, self.engine_metrics, self.win_gpu, self.events = gpu_mem, engine_metrics, win_gpu, events
+        self.stats = stats
         self.log_dir, self.models_dir, self.default_baseline_mib = log_dir, models_dir, default_baseline_mib
         self.lock = threading.RLock()
         self.poll_lock = threading.Lock()  # the loop and the HTTP actions both poll
@@ -101,6 +103,9 @@ class Supervisor:
         running = any(procs.values())
         metrics = self.engine_metrics.collect([mid for mid, ok in healthy.items() if ok]) if self.engine_metrics else {}
         samples = self.engine_metrics.samples() if self.engine_metrics else {}
+        if self.stats:
+            self.stats.observe(time.time(), {mid: (self.registry.models[mid]["engine_id"], samples.get(mid))
+                                             for mid, ok in healthy.items() if ok and mid in self.registry.models})
         mem = self._gpu_mem(gpu, procs)
         if mem is not None:  # measured per process: everything else is the baseline
             self.baseline = max(0, gpu["used"] - sum(mem.values()))
@@ -334,6 +339,8 @@ class Supervisor:
 
     def shutdown(self):
         """Stop the models started here (the launcher is stopping)."""
+        if self.stats:
+            self.stats.flush(time.time())
         with self.lock:
             mine = list(self.runs)
         for mid in mine:

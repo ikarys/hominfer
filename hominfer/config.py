@@ -19,6 +19,7 @@ _XDG_STATE = Path(os.environ.get("XDG_STATE_HOME") or HOME / ".local" / "state")
 
 # engines.json, models.json, settings.json: local, never versioned
 CONFIG_DIR = Path(os.environ.get("HOMINFER_CONFIG_DIR") or _XDG_CONFIG / "hominfer").expanduser()
+STATS_FILE = Path(os.environ.get("HOMINFER_STATS_FILE") or _XDG_STATE / "hominfer" / "stats.json").expanduser()
 LOG_DIR = Path(os.environ.get("HOMINFER_LOG_DIR") or _XDG_STATE / "hominfer" / "logs").expanduser()
 ENGINES_FILE = CONFIG_DIR / "engines.json"
 MODELS_FILE = CONFIG_DIR / "models.json"

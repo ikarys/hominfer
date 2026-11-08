@@ -92,6 +92,7 @@ UI language, falling back to English.
 | `HOMINFER_PORT` | `8090` | listen port |
 | `HOMINFER_CONFIG_DIR` | `~/.config/hominfer` | where the three JSON files live |
 | `HOMINFER_LOG_DIR` | `~/.local/state/hominfer/logs` | model, download and install logs (a running model's log is emptied past 50 MiB, the 20 latest download logs are kept) |
+| `HOMINFER_STATS_FILE` | `~/.local/state/hominfer/stats.json` | usage history shown on the Stats page: hourly buckets per model (up time, busy time by requests running at once, peaks), saved every minute, kept 90 days |
 | `HOMINFER_MODELS_DIR` | `~/hominfer_models` | models folder until one is set in Settings |
 | `HOMINFER_ALLOWED_HOSTS` | empty | extra host names the page is opened by (comma-separated), e.g. a local DNS name; IP addresses, `localhost` and the machine's name always work, any other name gets a 403 |
 | `HF_TOKEN` | | Hugging Face token, for gated or private models |

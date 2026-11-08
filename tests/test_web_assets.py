@@ -10,7 +10,7 @@ from hominfer.web import page
 from tests.test_page import FakeSettings
 
 # what the scripts look up in the page, whatever the shell
-REQUIRED = ["{{VIEWS}}", 'id="conn"', *(f'data-view="{v}"' for v in ("home", "manage", "settings"))]
+REQUIRED = ["{{VIEWS}}", 'id="conn"', *(f'data-view="{v}"' for v in ("home", "manage", "settings", "stats"))]
 
 
 @pytest.fixture

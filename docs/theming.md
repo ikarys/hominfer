@@ -48,18 +48,18 @@ A shell is a folder `hominfer/web_assets/shells/<name>/` with `shell.html` and `
 
 `shell.html` must contain:
 
-- the placeholder `{{VIEWS}}`, once (the three views: dashboard, models, settings);
+- the placeholder `{{VIEWS}}`, once (the four views: dashboard, models, stats, settings);
 - `{{t:key}}` for texts, `{{BUILD}}` and `{{BUILD_DATE}}` for the build string if wanted;
 - `<span id="conn">` (connection state, filled by the script);
-- one `a[data-view="home"]`, `a[data-view="manage"]` and `a[data-view="settings"]` (navigation, the script marks the
-  current one active; hrefs `/`, `/models`, `/settings`).
+- one `a[data-view="home"]`, `a[data-view="manage"]`, `a[data-view="stats"]` and `a[data-view="settings"]`
+  (navigation, the script marks the current one active; hrefs `/`, `/models`, `/stats`, `/settings`).
 
 Dialogs are added by `index.html`, outside the shell. No inline `style=` anywhere. A shell styles structure
 (header, nav, width, columns), a theme styles looks; keep colours as tokens so every theme works with every shell.
 
 ### Overriding a view, adding a script
 
-- `shells/<name>/views/<view>.html` (`home`, `manage`, `settings`) replaces the shared `views/<view>.html` for that
+- `shells/<name>/views/<view>.html` (`home`, `manage`, `stats`, `settings`) replaces the shared `views/<view>.html` for that
   shell; a missing file falls back to the shared one. Overrides keep the ids the shared scripts use, or bring their
   own script.
 - `shells/<name>/shell.js` (optional ES module, loaded after `main.js` starts) may export `home = { build, poll }`

@@ -1,6 +1,7 @@
 """URL -> service call. A handler gets (app, match, body) and returns the JSON payload
 (body: the JSON of a POST, the query parameters of a GET)."""
 import re
+import time
 from dataclasses import dataclass
 from typing import Callable
 
@@ -96,6 +97,17 @@ def _events(app, body):
     return app.events.since(since)
 
 
+def _stats(app, query):
+    """GET /api/stats?from=&to= (epoch seconds; default: the last 7 days)."""
+    now = time.time()
+    try:
+        end = float(query.get("to", now))
+        start = float(query.get("from", end - 7 * 86400))
+    except ValueError:
+        end, start = now, now - 7 * 86400
+    return app.supervisor.stats.query(start, end) if app.supervisor.stats else {}
+
+
 def _do(action):
     """A handler running action(app) and answering {"ok": true}."""
     def handler(app, match, body):
@@ -106,6 +118,7 @@ def _do(action):
 
 ROUTES = [
     Route("GET", re.compile(r"/api/status"), lambda app, m, b: app.supervisor.snapshot),
+    Route("GET", re.compile(r"/api/stats"), lambda app, m, b: _stats(app, b)),
     Route("GET", re.compile(r"/api/events"), lambda app, m, b: _events(app, b)),
     Route("GET", re.compile(r"/api/models"), lambda app, m, b: presenters.models(app)),
     Route("GET", re.compile(r"/api/library"), lambda app, m, b: presenters.library(app)),

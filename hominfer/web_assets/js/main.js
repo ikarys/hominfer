@@ -1,4 +1,4 @@
-// Entry point: one page, three views (/: dashboard, /models: models, /settings: settings)
+// Entry point: one page, four views (/: dashboard, /models: models, /stats: usage history, /settings: settings)
 import { api } from "./api.js";
 import { bindEngineCatalog, loadEngines } from "./components/engine-catalog.js";
 import { bindFolderPicker } from "./components/folder-picker.js";
@@ -12,8 +12,9 @@ import { bindLibrary, loadLibrary } from "./views/library.js";
 import { bindModelsTable, renderModelsTable } from "./views/models-table.js";
 import { bindEngineSettings, loadEngineSettings } from "./components/engine-settings.js";
 import { bindSettings } from "./views/settings.js";
+import { loadStats } from "./views/stats.js";
 
-const VIEWS = { "/": "home", "/models": "manage", "/modeles": "manage", "/settings": "settings" };
+const VIEWS = { "/": "home", "/models": "manage", "/modeles": "manage", "/settings": "settings", "/stats": "stats" };
 const VIEW = VIEWS[location.pathname] || "home";
 const POLL_MS = 2000;
 
@@ -47,6 +48,7 @@ await reloadModels();
 // a shell with its own home also shows live data (its status band) on every page
 if (VIEW === "home" || shell.home) setInterval(() => document.hidden || poll(), POLL_MS);
 if (VIEW === "manage" && shell.manage) await shell.manage();
+if (VIEW === "stats") await loadStats();
 if (VIEW === "settings") {
   if (shell.settings) await shell.settings();
   else { loadEngines(); loadEngineSettings(); }

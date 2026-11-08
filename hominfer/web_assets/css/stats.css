@@ -1,0 +1,31 @@
+#statsRange button.on {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.stats-chart {
+  margin: 12px 0 0;
+}
+
+.stats-chart figcaption {
+  margin-bottom: 4px;
+}
+
+.stats-chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.stats-chart g:hover rect.bar-fill {
+  opacity: .8;
+}
+
+#statsTotal {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+#statsCustom input {
+  min-width: 0;
+  flex: 0 1 auto;
+}

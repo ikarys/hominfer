@@ -1,0 +1,42 @@
+<div class="stats">
+  <section class="panel lib">
+    <div class="lib-head">
+      <h3>{{t:ui.stats.title}}</h3>
+      <span class="row push" id="statsRange">
+        <button type="button" class="button" data-range="86400">{{t:ui.stats.r24h}}</button>
+        <button type="button" class="button" data-range="604800">{{t:ui.stats.r7d}}</button>
+        <button type="button" class="button" data-range="2592000">{{t:ui.stats.r30d}}</button>
+        <button type="button" class="button" data-range="7776000">{{t:ui.stats.r90d}}</button>
+        <form id="statsCustom" class="row">
+          <input type="date" name="from" aria-label="{{t:ui.stats.from}}">
+          <input type="date" name="to" aria-label="{{t:ui.stats.to}}">
+          <button type="submit" class="button">{{t:ui.stats.apply}}</button>
+        </form>
+      </span>
+    </div>
+    <div class="meta flat" id="statsSpan"></div>
+    <div class="msg" id="statsMsg" role="status"></div>
+    <div class="metrics" id="statsTotal"></div>
+    <figure class="stats-chart">
+      <figcaption class="meta flat">{{t:ui.stats.chart}}</figcaption>
+      <div id="statsChart"></div>
+    </figure>
+  </section>
+  <section class="panel lib">
+    <div class="lib-head">
+      <h3>{{t:ui.stats.by_model}}</h3>
+    </div>
+    <div class="table-wrap">
+      <table id="statsModels"></table>
+    </div>
+  </section>
+  <section class="panel lib">
+    <div class="lib-head">
+      <h3>{{t:ui.stats.by_engine}}</h3>
+    </div>
+    <div class="table-wrap">
+      <table id="statsEngines"></table>
+    </div>
+  </section>
+  <p class="meta flat">{{t:ui.stats.note}}</p>
+</div>
