@@ -16,7 +16,7 @@
 
 On the first start, the dashboard says where to begin:
 
-![First start](images/first-run.png)
+![First start](images/first-run-cyber.png)
 
 ## Install an inference engine
 
@@ -33,7 +33,7 @@ build of llama.cpp (AMD, Intel) also needs the Vulkan and SPIR-V headers and `gl
 
 **Update** on an installed engine runs its script again (pull and rebuild).
 
-![The engine catalog](images/engines.png)
+![The engine catalog](images/engines-cyber.png)
 
 ## Add a model from Hugging Face
 
@@ -43,13 +43,13 @@ build of llama.cpp (AMD, Intel) also needs the Vulkan and SPIR-V headers and `gl
    last case the launcher suggests an engine from the catalog. A text-to-speech model (Qwen3-TTS and the
    like) is served by vLLM-Omni: install it from the suggestion when the verdict asks for it.
 
-![The Hugging Face verdict: an engine to install is suggested](images/hf-tts-verdict.png)
+![The Hugging Face verdict: an engine to install is suggested](images/hf-tts-verdict-cyber.png)
 
 3. Tick the variants you want and **Download the selection**. The files go to the models folder.
 4. In **Library**, **Add as a model** opens the model form with the file and the engine filled in. Pick a
    port, check the params, **Save**.
 
-![The model form, engine and section prefilled](images/model-form.png)
+![The model form, engine and section prefilled](images/model-form-cyber.png)
 
 The model is now on the **Dashboard**: **Start**, and the card shows its state, VRAM, RAM and CPU.
 
