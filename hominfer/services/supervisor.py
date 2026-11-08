@@ -15,6 +15,7 @@ import psutil
 
 from ..domain import engine as engine_rules
 from ..domain import events as event_rules
+from ..domain import restart as restart_rules
 from ..domain.model import clean_options
 from ..domain.status import baseline_ok, model_state, model_vram, on_gpu_for
 from ..errors import LaunchError
@@ -44,6 +45,7 @@ class Supervisor:
         self.runs = {}       # started from here: id -> {popen, opts, vram_before, vram_load}
         self.errors = {}     # id -> message
         self.stopping = set()
+        self.restarts = {}   # id -> epoch times of its automatic restarts
         self.baseline = None  # VRAM used with no model, once seen
         self.pcache = {}     # pid -> psutil.Process (cpu_percent needs its history)
         self.snapshot = {"ready": False}
@@ -143,6 +145,7 @@ class Supervisor:
         return {mid: sum(by_pid.get(p.pid, 0) for p in ps) for mid, ps in procs.items()}
 
     def _model_view(self, mid, m, ps, gpu, on_gpu, healthy, mem_mib=None):
+        self._watch(mid, ps, healthy)
         run = self._check_exit(mid, ps)
         state = model_state(stopping=mid in self.stopping, running=bool(ps), failed=mid in self.errors,
                             healthy=bool(ps) and healthy)
@@ -168,6 +171,30 @@ class Supervisor:
             "env": run["env"] if run else None,
             "engine_behind": self.updates.behind(m["engine_id"]),
         }
+
+    def _watch(self, mid, ps, healthy):
+        """Restart (in a thread) a model started here that died or stopped answering after being ready."""
+        run = self.runs.get(mid)
+        if not run or mid in self.stopping or not self.registry.engines[self.registry.models[mid]["engine_id"]].get("restart", True):
+            return
+        now = time.time()
+        hist = self.restarts[mid] = [t for t in self.restarts.get(mid, []) if now - t < 3600]
+        v = restart_rules.verdict(run["watch"], alive=bool(ps), healthy=healthy, history=hist, now=now)
+        if v == "restart":
+            hist.append(now)
+            self.stopping.add(mid)
+            self._log("warn", "restarted", mid)
+            threading.Thread(target=self._restart, args=(mid, ps, run["opts"]), daemon=True).start()
+        elif v:
+            self._log("alarm", "restart_gave_up", mid)
+
+    def _restart(self, mid, procs, opts):
+        self._kill(mid, procs)
+        try:
+            self.start(mid, opts)
+        except LaunchError as e:
+            with self.lock:
+                self.errors[mid] = str(e)
 
     def _check_exit(self, mid, ps):
         """The run of a model started here, forgotten (with an error) if it died by itself."""
@@ -248,7 +275,7 @@ class Supervisor:
             popen = processes.spawn(argv, self.log_dir / f"{mid}.log", env=env, header=header)
             self.runs[mid] = {
                 "popen": popen, "opts": clean, "env": engine_rules.redact([], env)[1],
-                "vram_before": gpu and gpu["used"], "vram_load": None,
+                "vram_before": gpu and gpu["used"], "vram_load": None, "watch": restart_rules.new_watch(),
             }
             self.errors.pop(mid, None)
             self._log("run", "start_req", mid)

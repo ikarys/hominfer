@@ -69,6 +69,7 @@ def test_device_param(device, free, expected_env, expected_need):
     ({"procs": []}, "procs"),
     ({"command": ["/bin/serve", "{nope}"]}, "{nope}"),
     ({"device_param": "gpu"}, "device_param"),
+    ({"restart": "yes"}, "restart"),
 ])
 def test_validate_rejects(change, message):
     raw = {"label": "x", "command": ["/bin/serve"], "health": "/h", "endpoint": "/v1", "procs": ["serve"]} | change

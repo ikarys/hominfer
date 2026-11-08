@@ -67,6 +67,7 @@ def validate(eid, e):
     env = e.get("env", {})
     need(isinstance(env, dict) and all(isinstance(v, str) for v in env.values()), "cfg.env")
     need(isinstance(e.get("procs"), list) and e["procs"], "cfg.procs")
+    need(isinstance(e.get("restart", True), bool), "cfg.restart")
     for k in ("health", "endpoint"):
         need(str(e.get(k, "")).startswith("/"), "cfg.http_path", key=k)
     if "metrics" in e:

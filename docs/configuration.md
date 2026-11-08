@@ -33,6 +33,7 @@ weights.
 | `provides_repos` | Hugging Face repositories this engine downloads itself |
 | `uses` | where those weights land, relative to the models folder (e.g. `hf/models--org--name`) |
 | `metrics` | counters shown on the model card, read from the engine's Prometheus endpoint: `{"path": "/metrics", "show": [item, ...]}` (details below) |
+| `restart` | restart the model automatically when its engine dies or stops answering its health check after being ready (3 failed checks in a row; at most 3 times an hour). Default `true`; `false` turns it off |
 | `install_hint` | shown when the engine is missing |
 | `repo`, `build`, `binary` | git clone of the engine: enables "Check for updates" / "Update" (pull + build) on the engine in Settings |
 

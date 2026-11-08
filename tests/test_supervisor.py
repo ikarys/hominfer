@@ -59,3 +59,35 @@ def test_amd_per_process_memory_gives_exact_vram_and_baseline(monkeypatch, tmp_p
     m = s.snapshot["models"]["m0"]
     assert (m["on_gpu"], m["vram_mib"], m["vram_how"]) == (True, 3000, "live")
     assert s.snapshot["gpu"]["baseline"] == 2000 and "pdev" not in s.snapshot["gpu"]
+
+
+def watched(monkeypatch, tmp_path, engine=None, stopping=False):
+    s = make(monkeypatch, tmp_path, lambda port, path: False)
+    s.registry.engines = {"e": engine or {}}
+    s.runs["m0"] = {"popen": SimpleNamespace(poll=lambda: None, returncode=None), "opts": {"ctx": "1"}, "env": {},
+                    "vram_before": None, "vram_load": None, "watch": {"ready": True, "fails": 2}}
+    if stopping:
+        s.stopping.add("m0")
+    calls = []
+    monkeypatch.setattr(s, "_restart", lambda *a: calls.append(a))
+    monkeypatch.setattr(s, "_probe", lambda procs: {})  # no thread pool: Thread is faked below
+    monkeypatch.setattr(sup.threading, "Thread", lambda target, args, daemon: SimpleNamespace(start=lambda: target(*args)))
+    return s, calls
+
+
+def test_unhealthy_ready_model_is_restarted(monkeypatch, tmp_path):
+    s, calls = watched(monkeypatch, tmp_path)
+    s.poll()
+    assert [(c[0], c[2]) for c in calls] == [("m0", {"ctx": "1"})]
+
+
+def test_restart_can_be_disabled(monkeypatch, tmp_path):
+    s, calls = watched(monkeypatch, tmp_path, engine={"restart": False})
+    s.poll()
+    assert calls == []
+
+
+def test_user_stop_is_not_restarted(monkeypatch, tmp_path):
+    s, calls = watched(monkeypatch, tmp_path, stopping=True)
+    s.poll()
+    assert calls == []
